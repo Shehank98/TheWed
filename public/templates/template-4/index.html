@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Barlow+Condensed:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-bg" data-parallax data-hero-bg></div>
+    <div class="hero-scrim"></div>
+    <div class="hero-content">
+      <p class="kicker" data-reveal>— The wedding of —</p>
+      <h1 class="title">
+        <span data-reveal data-groom>—</span>
+        <span class="amp" data-reveal>&amp;</span>
+        <span data-reveal data-bride>—</span>
+      </h1>
+      <p class="sub" data-reveal><span data-date-long></span></p>
+      <p class="sub small" data-reveal data-venue-name></p>
+    </div>
+    <div class="scroll-cue">SCROLL</div>
+  </header>
+
+  <section class="cd-section">
+    <div class="cd" data-countdown data-reveal>
+      <div><b data-cd-days>0</b><span>Days</span></div>
+      <i>:</i>
+      <div><b data-cd-hours>0</b><span>Hours</span></div>
+      <i>:</i>
+      <div><b data-cd-mins>0</b><span>Minutes</span></div>
+      <i>:</i>
+      <div><b data-cd-secs>0</b><span>Seconds</span></div>
+    </div>
+  </section>
+
+  <section class="story-section" data-story-section>
+    <div class="story-media" data-parallax data-story-media></div>
+    <div class="story-copy">
+      <h2 data-reveal>Our Story</h2>
+      <p data-reveal data-story></p>
+    </div>
+  </section>
+
+  <section class="details-section">
+    <div class="details-inner">
+      <h2 data-reveal>The Celebration</h2>
+      <div class="detail-line" data-reveal><span class="lbl">When</span><span data-date-long></span> · <span data-time></span></div>
+      <div class="detail-line" data-reveal><span class="lbl">Where</span><span data-venue-name></span></div>
+      <div class="detail-line" data-reveal><span class="lbl">Address</span><span data-venue-address></span></div>
+    </div>
+  </section>
+
+  <section class="gallery-section" data-gallery-section>
+    <h2 data-reveal>Moments</h2>
+    <div class="gallery" data-gallery></div>
+  </section>
+
+  <section class="rsvp-section">
+    <h2 data-reveal>Reserve your seat</h2>
+    <form data-thewed-rsvp class="rsvp" data-reveal>
+      <label>Full name<input type="text" name="guest_name" required /></label>
+      <label>Attending<select name="attending"><option value="yes">Yes — count me in</option><option value="no">No — with regret</option></select></label>
+      <label>Guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      <label>Message<textarea name="message" rows="3"></textarea></label>
+      <button type="submit">Confirm attendance</button>
+      <p class="status" data-rsvp-status></p>
+    </form>
+    <p class="rsvp-phone" data-rsvp-phone></p>
+  </section>
+
+  <footer class="foot">
+    <p class="hashtag" data-hashtag></p>
+    <p class="made">TheWed</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="/templates/_shared/thewed.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

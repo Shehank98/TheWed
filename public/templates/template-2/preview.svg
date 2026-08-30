@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#ffffff"/>
+  <rect width="200" height="300" fill="#eeeae4"/>
+  <line x1="200" y1="0" x2="200" y2="300" stroke="#e6e6e6"/>
+  <text x="230" y="60" font-family="Inter, sans-serif" font-size="9" letter-spacing="3" fill="#777">THE WEDDING OF</text>
+  <text x="230" y="120" font-family="Georgia, serif" font-size="34" fill="#111">Kavindu</text>
+  <text x="230" y="150" font-family="Georgia, serif" font-size="16" font-style="italic" fill="#777">and</text>
+  <text x="230" y="188" font-family="Georgia, serif" font-size="34" fill="#111">Senali</text>
+  <text x="230" y="240" font-family="Inter, sans-serif" font-size="10" letter-spacing="1" fill="#777">2026.12.20 · COLOMBO</text>
+  <circle cx="100" cy="150" r="42" fill="none" stroke="#c9c2b8" stroke-width="1.5"/>
+</svg>

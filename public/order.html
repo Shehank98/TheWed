@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your order — TheWed</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container"><a class="brand" href="/">TheWed</a></div>
+  </header>
+
+  <main class="container narrow" style="padding:40px 20px;">
+    <div id="loading" class="notice warn">Loading your order…</div>
+    <div id="content" class="hidden"></div>
+  </main>
+
+  <footer class="site-footer">TheWed · digital wedding invitations</footer>
+
+  <script>
+    const ref = location.pathname.split('/').filter(Boolean).pop();
+    const content = document.getElementById('content');
+    const loading = document.getElementById('loading');
+
+    function money(v) { return 'LKR ' + Number(v).toLocaleString('en-LK'); }
+
+    function bankBlock(bank) {
+      return `
+        <div class="panel" style="margin-top:20px;">
+          <h3 class="serif" style="margin-top:0;">Bank transfer details</h3>
+          <div class="kv"><span class="k">Bank</span><span class="v">${bank.bankName}</span></div>
+          <div class="kv"><span class="k">Account name</span><span class="v">${bank.accountName}</span></div>
+          <div class="kv"><span class="k">Account number</span><span class="v">${bank.accountNumber}</span></div>
+          <div class="kv"><span class="k">Branch</span><span class="v">${bank.branch}</span></div>
+          ${bank.swift ? `<div class="kv"><span class="k">SWIFT</span><span class="v">${bank.swift}</span></div>` : ''}
+          <p class="hint" style="margin-top:14px;">Please add your reference code <strong>${ref}</strong> as the payment reference so we can match your transfer. Once we confirm it, you’ll get an email with a private link to build your invitation.</p>
+        </div>`;
+    }
+
+    async function load() {
+      try {
+        const res = await fetch('/api/orders/' + encodeURIComponent(ref));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Order not found');
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+
+        const o = data.order;
+        const statusBadge = o.status === 'paid'
+          ? '<span class="badge paid">Paid</span>'
+          : '<span class="badge pending">Awaiting payment</span>';
+
+        let html = `
+          <h1 class="serif">Thank you, ${o.customer_name}!</h1>
+          <p style="color:var(--muted);">Your order for the <strong>${o.template ? o.template.name : 'wedding invitation'}</strong> template ${statusBadge}</p>
+          <div style="text-align:center;margin:24px 0;">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">YOUR REFERENCE CODE</div>
+            <div class="code-badge">${o.reference_code}</div>
+          </div>
+          <div class="panel">
+            <div class="kv"><span class="k">Amount</span><span class="v">${money(o.amount)}</span></div>
+            <div class="kv"><span class="k">Email</span><span class="v">${o.email}</span></div>
+            <div class="kv"><span class="k">Status</span><span class="v">${o.status === 'paid' ? 'Paid' : 'Pending payment'}</span></div>
+          </div>`;
+
+        if (o.status === 'pending_payment' && data.bank) {
+          html += bankBlock(data.bank);
+          html += `<p class="notice warn" style="margin-top:20px;">This page updates when we confirm your payment. You can bookmark it and check back, or wait for our email.</p>`;
+        } else if (o.status === 'paid') {
+          html += `<div class="notice ok" style="margin-top:20px;">Payment confirmed! ${data.invitationReady ? 'Check your email for the private link to build your invitation.' : 'Your invitation is being set up.'}</div>`;
+        }
+        content.innerHTML = html;
+      } catch (err) {
+        loading.className = 'notice err';
+        loading.textContent = err.message;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

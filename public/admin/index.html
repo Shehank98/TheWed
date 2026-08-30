@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — TheWed</title>
+  <link rel="stylesheet" href="/css/app.css" />
+  <style>
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .toolbar select { width: auto; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+    .tab { padding: 9px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; border: 1px solid var(--line); background: #faf8f4; }
+    .tab.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+    td .btn { margin-right: 4px; }
+    .table-wrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/">TheWed</a>
+      <span id="admin-actions"></span>
+    </div>
+  </header>
+
+  <!-- LOGIN -->
+  <main class="container narrow" id="login-view" style="padding:60px 20px;">
+    <div class="panel">
+      <h1 class="serif" style="margin-top:0;">Admin sign in</h1>
+      <div id="login-error" class="notice err hidden"></div>
+      <form id="login-form">
+        <div class="field"><label>Username</label><input type="text" id="username" required /></div>
+        <div class="field"><label>Password</label><input type="password" id="password" required /></div>
+        <button type="submit" class="btn block">Sign in</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- DASHBOARD -->
+  <main class="container" id="dash-view" style="padding:30px 20px;display:none;">
+    <div class="tabs">
+      <div class="tab active" data-tab="orders">Orders</div>
+      <div class="tab" data-tab="invitations">Invitations</div>
+    </div>
+
+    <div id="tab-orders">
+      <div class="toolbar">
+        <strong>Orders</strong>
+        <select id="order-filter">
+          <option value="">All</option>
+          <option value="pending_payment">Pending payment</option>
+          <option value="paid">Paid</option>
+        </select>
+        <button class="btn ghost small" id="orders-refresh">Refresh</button>
+      </div>
+      <div id="orders-msg"></div>
+      <div class="table-wrap"><table id="orders-table"><thead><tr>
+        <th>Ref</th><th>Customer</th><th>Template</th><th>Amount</th><th>Status</th><th>Created</th><th>Action</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div id="tab-invitations" style="display:none;">
+      <div class="toolbar">
+        <strong>Invitations</strong>
+        <select id="inv-filter">
+          <option value="">All</option>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+          <option value="archived">Archived</option>
+        </select>
+        <button class="btn ghost small" id="inv-refresh">Refresh</button>
+      </div>
+      <div id="inv-msg"></div>
+      <div class="table-wrap"><table id="inv-table"><thead><tr>
+        <th>Couple</th><th>Customer</th><th>Template</th><th>Status</th><th>Slug</th><th>Archive at</th><th>Actions</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </main>
+
+  <script>
+    const loginView = document.getElementById('login-view');
+    const dashView = document.getElementById('dash-view');
+
+    async function checkAuth() {
+      const res = await fetch('/api/admin/me');
+      if (res.ok) showDash(); else showLogin();
+    }
+    function showLogin() {
+      loginView.style.display = ''; dashView.style.display = 'none';
+      document.getElementById('admin-actions').innerHTML = '';
+    }
+    function showDash() {
+      loginView.style.display = 'none'; dashView.style.display = '';
+      document.getElementById('admin-actions').innerHTML = '<button class="btn ghost small" id="logout">Sign out</button>';
+      document.getElementById('logout').addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST' }); showLogin();
+      });
+      loadOrders();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('login-error');
+      errBox.classList.add('hidden');
+      const res = await fetch('/api/admin/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('username').value,
+          password: document.getElementById('password').value,
+        }),
+      });
+      if (res.ok) showDash();
+      else { errBox.textContent = 'Invalid credentials'; errBox.classList.remove('hidden'); }
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const orders = tab.dataset.tab === 'orders';
+      document.getElementById('tab-orders').style.display = orders ? '' : 'none';
+      document.getElementById('tab-invitations').style.display = orders ? 'none' : '';
+      if (orders) loadOrders(); else loadInvitations();
+    }));
+
+    function money(v) { return 'LKR ' + Number(v).toLocaleString('en-LK'); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function fmt(d){ return d ? new Date(d).toLocaleString() : '—'; }
+
+    // ---- Orders ----
+    async function loadOrders() {
+      const status = document.getElementById('order-filter').value;
+      const tbody = document.querySelector('#orders-table tbody');
+      tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
+      const res = await fetch('/api/admin/orders' + (status ? '?status=' + status : ''));
+      if (!res.ok) { tbody.innerHTML = '<tr><td colspan="7">Failed to load.</td></tr>'; return; }
+      const { orders } = await res.json();
+      if (!orders.length) { tbody.innerHTML = '<tr><td colspan="7">No orders.</td></tr>'; return; }
+      tbody.innerHTML = orders.map((o) => `
+        <tr>
+          <td><code>${o.reference_code}</code></td>
+          <td>${esc(o.customer_name)}<br><span class="hint">${esc(o.email)}</span></td>
+          <td>${esc(o.template_name)}</td>
+          <td>${money(o.amount)}</td>
+          <td>${o.status === 'paid' ? '<span class="badge paid">Paid</span>' : '<span class="badge pending">Pending</span>'}</td>
+          <td>${fmt(o.created_at)}</td>
+          <td>${o.status === 'paid'
+            ? (o.invitation_id ? '<span class="hint">invitation #' + o.invitation_id + '</span>' : '')
+            : '<button class="btn small" data-markpaid="' + o.id + '">Mark paid</button>'}</td>
+        </tr>`).join('');
+      tbody.querySelectorAll('[data-markpaid]').forEach((b) => b.addEventListener('click', () => markPaid(b.dataset.markpaid, b)));
+    }
+    document.getElementById('order-filter').addEventListener('change', loadOrders);
+    document.getElementById('orders-refresh').addEventListener('click', loadOrders);
+
+    async function markPaid(id, btn) {
+      btn.disabled = true; btn.textContent = 'Working…';
+      const msg = document.getElementById('orders-msg');
+      const res = await fetch('/api/admin/orders/' + id + '/mark-paid', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { msg.className = 'notice err'; msg.textContent = data.error || 'Failed'; btn.disabled = false; btn.textContent = 'Mark paid'; return; }
+      const emailNote = data.email && data.email.ok ? 'Confirmation email sent.'
+        : (data.email && data.email.skipped ? 'Email not configured — magic link: ' + data.magicLink : 'Email failed — magic link: ' + data.magicLink);
+      msg.className = 'notice ok';
+      msg.innerHTML = 'Marked paid. ' + esc(emailNote);
+      loadOrders();
+    }
+
+    // ---- Invitations ----
+    async function loadInvitations() {
+      const status = document.getElementById('inv-filter').value;
+      const tbody = document.querySelector('#inv-table tbody');
+      tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
+      const res = await fetch('/api/admin/invitations' + (status ? '?status=' + status : ''));
+      if (!res.ok) { tbody.innerHTML = '<tr><td colspan="7">Failed to load.</td></tr>'; return; }
+      const { invitations } = await res.json();
+      if (!invitations.length) { tbody.innerHTML = '<tr><td colspan="7">No invitations.</td></tr>'; return; }
+      tbody.innerHTML = invitations.map((i) => {
+        const couple = [i.groom_name, i.bride_name].filter(Boolean).join(' & ') || '—';
+        const archiveVal = i.archive_at ? new Date(i.archive_at).toISOString().slice(0,10) : '';
+        const slugCell = i.slug ? `<a href="/i/${i.slug}" target="_blank" rel="noopener">${i.slug}</a>` : '—';
+        return `
+        <tr>
+          <td>${esc(couple)}</td>
+          <td>${esc(i.customer_name)}<br><span class="hint">${esc(i.email)}</span></td>
+          <td>${esc(i.template_name)}</td>
+          <td><span class="badge ${i.status}">${i.status}</span></td>
+          <td>${slugCell}</td>
+          <td><input type="date" value="${archiveVal}" data-arch="${i.id}" style="width:150px;padding:6px;" /></td>
+          <td style="white-space:nowrap;">
+            <button class="btn small" data-resend="${i.id}">Resend link</button>
+            <button class="btn ghost small" data-savearch="${i.id}">Save date</button>
+            ${i.status !== 'archived' ? '<button class="btn ghost small" data-archive="'+i.id+'">Archive</button>' : '<button class="btn ghost small" data-unarchive="'+i.id+'">Unarchive</button>'}
+          </td>
+        </tr>`;
+      }).join('');
+      const msg = document.getElementById('inv-msg');
+      tbody.querySelectorAll('[data-resend]').forEach((b) => b.addEventListener('click', async () => {
+        b.disabled = true;
+        const res = await fetch('/api/admin/invitations/' + b.dataset.resend + '/resend-magic-link', { method: 'POST' });
+        const d = await res.json();
+        msg.className = res.ok ? 'notice ok' : 'notice err';
+        msg.innerHTML = res.ok ? ((d.email && d.email.ok) ? 'Magic link email re-sent.' : 'Email not sent (not configured). Link: ' + esc(d.magicLink)) : (d.error || 'Failed');
+        b.disabled = false;
+      }));
+      tbody.querySelectorAll('[data-savearch]').forEach((b) => b.addEventListener('click', async () => {
+        const input = tbody.querySelector('[data-arch="' + b.dataset.savearch + '"]');
+        const res = await fetch('/api/admin/invitations/' + b.dataset.savearch + '/archive-at', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ archive_at: input.value || null }),
+        });
+        msg.className = res.ok ? 'notice ok' : 'notice err';
+        msg.textContent = res.ok ? 'Archive date updated.' : 'Failed to update.';
+      }));
+      const changeStatus = async (id, status) => {
+        const res = await fetch('/api/admin/invitations/' + id + '/status', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+        });
+        if (res.ok) loadInvitations();
+      };
+      tbody.querySelectorAll('[data-archive]').forEach((b) => b.addEventListener('click', () => changeStatus(b.dataset.archive, 'archived')));
+      tbody.querySelectorAll('[data-unarchive]').forEach((b) => b.addEventListener('click', () => changeStatus(b.dataset.unarchive, 'published')));
+    }
+    document.getElementById('inv-filter').addEventListener('change', loadInvitations);
+    document.getElementById('inv-refresh').addEventListener('click', loadInvitations);
+
+    checkAuth();
+  </script>
+</body>
+</html>

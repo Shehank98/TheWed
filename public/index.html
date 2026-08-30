@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TheWed — Beautiful digital wedding invitations</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/">TheWed</a>
+      <a class="btn ghost small" href="#templates">Browse templates</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 class="serif">Your love story, beautifully invited.</h1>
+    <p>Choose a template, pay by bank transfer, and build a stunning digital wedding invitation with a live RSVP form — ready to share in minutes.</p>
+  </section>
+
+  <main class="container" id="templates">
+    <h2 class="section-title">Choose your template</h2>
+    <div id="template-grid" class="grid">
+      <p class="notice warn">Loading templates…</p>
+    </div>
+  </main>
+
+  <!-- Order modal -->
+  <div id="order-modal" class="hidden" style="position:fixed;inset:0;background:rgba(30,25,20,0.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;">
+    <div class="panel narrow" style="width:100%;max-width:460px;position:relative;">
+      <button id="order-close" class="btn ghost small" style="position:absolute;top:14px;right:14px;">✕</button>
+      <h2 class="serif" style="margin-top:0;">Order <span id="order-template-name"></span></h2>
+      <p class="meta" id="order-template-price" style="color:var(--muted);"></p>
+      <div id="order-error" class="notice err hidden"></div>
+      <form id="order-form">
+        <input type="hidden" id="template_id" />
+        <div class="field">
+          <label for="customer_name">Your name</label>
+          <input type="text" id="customer_name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" required />
+          <div class="hint">We’ll email your setup link here once payment is confirmed.</div>
+        </div>
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" />
+        </div>
+        <button type="submit" class="btn block" id="order-submit">Place order</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">TheWed · digital wedding invitations</footer>
+
+  <script>
+    const grid = document.getElementById('template-grid');
+    const modal = document.getElementById('order-modal');
+
+    function money(v) {
+      return 'LKR ' + Number(v).toLocaleString('en-LK', { minimumFractionDigits: 0 });
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch('/api/templates');
+        const { templates } = await res.json();
+        grid.innerHTML = '';
+        templates.forEach((t) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="thumb"><img src="${t.preview_url}" alt="${t.name} preview" onerror="this.style.display='none'"/></div>
+            <div class="body">
+              <h3>${t.name}</h3>
+              <div class="meta">${t.animation_style.replace(/-/g, ' ')}</div>
+              <div class="price">${money(t.price)}</div>
+              <div style="display:flex;gap:8px;margin-top:14px;">
+                <a class="btn ghost small" href="/templates/${t.folder_key}/index.html" target="_blank" rel="noopener">Preview</a>
+                <button class="btn small" data-id="${t.id}" data-name="${t.name}" data-price="${t.price}">Select</button>
+              </div>
+            </div>`;
+          grid.appendChild(card);
+        });
+        grid.querySelectorAll('button[data-id]').forEach((btn) => {
+          btn.addEventListener('click', () => openOrder(btn.dataset.id, btn.dataset.name, btn.dataset.price));
+        });
+      } catch (e) {
+        grid.innerHTML = '<p class="notice err">Could not load templates. Please refresh.</p>';
+      }
+    }
+
+    function openOrder(id, name, price) {
+      document.getElementById('template_id').value = id;
+      document.getElementById('order-template-name').textContent = name;
+      document.getElementById('order-template-price').textContent = money(price);
+      document.getElementById('order-error').classList.add('hidden');
+      document.getElementById('order-form').reset();
+      document.getElementById('template_id').value = id;
+      modal.classList.remove('hidden');
+    }
+    document.getElementById('order-close').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    document.getElementById('order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('order-submit');
+      const errBox = document.getElementById('order-error');
+      btn.disabled = true; btn.textContent = 'Placing order…';
+      errBox.classList.add('hidden');
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            template_id: Number(document.getElementById('template_id').value),
+            customer_name: document.getElementById('customer_name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong');
+        window.location.href = '/order/' + data.order.reference_code;
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false; btn.textContent = 'Place order';
+      }
+    });
+
+    loadTemplates();
+  </script>
+</body>
+</html>

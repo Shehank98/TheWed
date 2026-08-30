@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <radialGradient id="g4" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#241f2b"/><stop offset="100%" stop-color="#0e0d0f"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g4)"/>
+  <text x="200" y="66" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-size="10" letter-spacing="6" fill="#c9a86a">THE WEDDING OF</text>
+  <text x="200" y="128" text-anchor="middle" font-family="'Playfair Display', serif" font-size="46" fill="#ece8e3">Kavindu</text>
+  <text x="200" y="158" text-anchor="middle" font-family="'Playfair Display', serif" font-size="22" font-style="italic" fill="#c9a86a">&amp;</text>
+  <text x="200" y="200" text-anchor="middle" font-family="'Playfair Display', serif" font-size="46" fill="#ece8e3">Senali</text>
+  <text x="200" y="244" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-size="12" letter-spacing="4" fill="#9a9490">DEC 20, 2026 · COLOMBO</text>
+</svg>

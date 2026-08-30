@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="mini-nav">
+    <span class="mono" data-initials>—</span>
+    <span class="mono" data-date-short>—</span>
+  </nav>
+
+  <header class="hero reveal-up">
+    <div class="hero-media" data-hero-media></div>
+    <div class="hero-copy">
+      <p class="label">The wedding of</p>
+      <h1><span data-groom>—</span><br><span class="thin">and</span><br><span data-bride>—</span></h1>
+      <p class="meta"><span data-date-long></span> · <span data-venue-name></span></p>
+    </div>
+  </header>
+
+  <section class="cd reveal-up">
+    <div class="cd-line" data-countdown>
+      <div><b data-cd-days>0</b><span>days</span></div>
+      <div><b data-cd-hours>0</b><span>hrs</span></div>
+      <div><b data-cd-mins>0</b><span>min</span></div>
+      <div><b data-cd-secs>0</b><span>sec</span></div>
+    </div>
+  </section>
+
+  <section class="block reveal-up" data-story-section>
+    <p class="block-label">01 — Our story</p>
+    <p class="story" data-story></p>
+  </section>
+
+  <section class="block reveal-up">
+    <p class="block-label">02 — Details</p>
+    <div class="detail-rows">
+      <div class="row"><span class="k">Date</span><span class="v" data-date-long></span></div>
+      <div class="row"><span class="k">Time</span><span class="v" data-time></span></div>
+      <div class="row"><span class="k">Venue</span><span class="v" data-venue-name></span></div>
+      <div class="row"><span class="k">Address</span><span class="v" data-venue-address></span></div>
+    </div>
+  </section>
+
+  <section class="block reveal-up" data-gallery-section>
+    <p class="block-label">03 — Gallery</p>
+    <div class="grid-imgs" data-gallery></div>
+  </section>
+
+  <section class="block reveal-up">
+    <p class="block-label">04 — RSVP</p>
+    <form data-thewed-rsvp class="rsvp">
+      <div class="pair">
+        <label>Name<input type="text" name="guest_name" required /></label>
+        <label>Guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      </div>
+      <label>Attending?
+        <select name="attending"><option value="yes">Yes, I'll be there</option><option value="no">Sorry, can't make it</option></select>
+      </label>
+      <label>Message<textarea name="message" rows="2"></textarea></label>
+      <button type="submit">Submit →</button>
+      <p class="status" data-rsvp-status></p>
+    </form>
+    <p class="rsvp-phone mono" data-rsvp-phone></p>
+  </section>
+
+  <footer class="foot">
+    <p class="hashtag mono" data-hashtag></p>
+    <p class="mono dim">TheWed</p>
+  </footer>
+
+  <script src="/templates/_shared/thewed.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

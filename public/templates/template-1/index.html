@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Cormorant:ital@0;1&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- HERO -->
+  <header class="hero reveal">
+    <div class="hero-inner">
+      <p class="eyebrow">Together with their families</p>
+      <h1 class="names"><span data-groom>—</span><span class="amp">&amp;</span><span data-bride>—</span></h1>
+      <p class="invite-line">request the pleasure of your company</p>
+      <div class="rule"><span></span>✦<span></span></div>
+      <p class="date-line" data-date-long></p>
+      <p class="venue-line" data-venue-name></p>
+    </div>
+    <div class="scroll-hint">❧</div>
+  </header>
+
+  <!-- COUNTDOWN -->
+  <section class="countdown reveal">
+    <h2 class="section-title">Counting down to forever</h2>
+    <div class="cd-grid" data-countdown>
+      <div><b data-cd-days>0</b><span>Days</span></div>
+      <div><b data-cd-hours>0</b><span>Hours</span></div>
+      <div><b data-cd-mins>0</b><span>Minutes</span></div>
+      <div><b data-cd-secs>0</b><span>Seconds</span></div>
+    </div>
+  </section>
+
+  <!-- STORY -->
+  <section class="story reveal" data-story-section>
+    <h2 class="section-title">Our Story</h2>
+    <div class="story-photo" data-couple-photo></div>
+    <p class="story-text" data-story></p>
+  </section>
+
+  <!-- DETAILS -->
+  <section class="details reveal">
+    <h2 class="section-title">The Celebration</h2>
+    <div class="detail-card">
+      <p class="detail-when" data-date-long></p>
+      <p class="detail-time" data-time></p>
+      <p class="detail-venue" data-venue-name></p>
+      <p class="detail-address" data-venue-address></p>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="gallery reveal" data-gallery-section>
+    <h2 class="section-title">Moments</h2>
+    <div class="gallery-grid" data-gallery></div>
+  </section>
+
+  <!-- RSVP -->
+  <section class="rsvp reveal">
+    <h2 class="section-title">Will you join us?</h2>
+    <form data-thewed-rsvp class="rsvp-form">
+      <label>Your name<input type="text" name="guest_name" required /></label>
+      <label>Will you attend?
+        <select name="attending">
+          <option value="yes">Joyfully accepts</option>
+          <option value="no">Regretfully declines</option>
+        </select>
+      </label>
+      <label>Number of guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      <label>A note for the couple<textarea name="message" rows="3"></textarea></label>
+      <button type="submit">Send RSVP</button>
+      <p class="rsvp-status" data-rsvp-status></p>
+    </form>
+    <p class="rsvp-phone" data-rsvp-phone></p>
+  </section>
+
+  <footer class="foot">
+    <p class="hashtag" data-hashtag></p>
+    <p class="made">With love · TheWed</p>
+  </footer>
+
+  <script src="/templates/_shared/thewed.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

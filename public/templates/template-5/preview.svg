@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#fbf4e6"/>
+  <rect x="12" y="12" width="376" height="276" fill="none" stroke="#c8a24a" stroke-width="2"/>
+  <rect x="18" y="18" width="364" height="264" fill="none" stroke="#c8a24a" stroke-width="0.6"/>
+  <g fill="none" stroke="#c8a24a" stroke-width="1.4" transform="translate(160,34) scale(0.8)">
+    <path d="M50 54 C 46 30, 50 12, 50 8 C 50 12, 54 30, 50 54"/>
+    <path d="M50 54 C 34 34, 30 20, 30 16 C 36 24, 46 40, 50 54"/>
+    <path d="M50 54 C 66 34, 70 20, 70 16 C 64 24, 54 40, 50 54"/>
+  </g>
+  <text x="200" y="118" text-anchor="middle" font-family="Cinzel, serif" font-size="11" letter-spacing="3" fill="#c8a24a">AYUBOWAN</text>
+  <text x="200" y="162" text-anchor="middle" font-family="Cinzel, serif" font-size="34" fill="#6e1420">Kavindu</text>
+  <text x="200" y="184" text-anchor="middle" font-size="16" fill="#c8a24a">✦</text>
+  <text x="200" y="216" text-anchor="middle" font-family="Cinzel, serif" font-size="34" fill="#6e1420">Senali</text>
+  <text x="200" y="252" text-anchor="middle" font-family="Cinzel, serif" font-size="13" letter-spacing="2" fill="#c8a24a">DECEMBER 20, 2026</text>
+</svg>

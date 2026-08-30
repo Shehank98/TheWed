@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#fdf3f2"/>
+  <g fill="#e7b7c1"><circle cx="40" cy="40" r="10"/><circle cx="60" cy="55" r="7"/><circle cx="28" cy="60" r="6"/></g>
+  <g fill="#e7b7c1"><circle cx="360" cy="260" r="10"/><circle cx="340" cy="245" r="7"/><circle cx="372" cy="240" r="6"/></g>
+  <text x="200" y="70" text-anchor="middle" font-family="Josefin Sans, sans-serif" font-size="10" letter-spacing="4" fill="#8a9a7b">WE'RE GETTING MARRIED</text>
+  <text x="200" y="140" text-anchor="middle" font-family="'Pinyon Script', cursive" font-size="52" fill="#a75f72">Kavindu</text>
+  <text x="200" y="168" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#8a9a7b">&amp;</text>
+  <text x="200" y="220" text-anchor="middle" font-family="'Pinyon Script', cursive" font-size="52" fill="#a75f72">Senali</text>
+  <text x="200" y="258" text-anchor="middle" font-family="Georgia, serif" font-size="14" letter-spacing="2" fill="#5a4a4f">DECEMBER 20, 2026</text>
+</svg>

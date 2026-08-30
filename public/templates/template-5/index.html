@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="border-frame" aria-hidden="true"></div>
+
+  <header class="hero">
+    <div class="lotus" aria-hidden="true">
+      <svg viewBox="0 0 100 60"><use href="#lotus"/></svg>
+    </div>
+    <p class="ayubowan reveal">ආයුබෝවන් · Ayubowan</p>
+    <p class="eyebrow reveal">With the blessings of the Triple Gem &amp; our families</p>
+    <div class="names reveal">
+      <h1 data-groom>—</h1>
+      <div class="knot">✦</div>
+      <h1 data-bride>—</h1>
+    </div>
+    <p class="tagline reveal">invite you to share in the joy of their wedding</p>
+    <p class="nekath reveal" data-nekath></p>
+    <div class="hero-date reveal" data-date-long></div>
+  </header>
+
+  <section class="cd reveal">
+    <div class="panel-orn">
+      <div class="cd-grid" data-countdown>
+        <div><b data-cd-days>0</b><span>Days</span></div>
+        <div><b data-cd-hours>0</b><span>Hours</span></div>
+        <div><b data-cd-mins>0</b><span>Minutes</span></div>
+        <div><b data-cd-secs>0</b><span>Seconds</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="story reveal" data-story-section>
+    <h2 class="orn-title">Our Journey</h2>
+    <div class="story-photo" data-couple-photo></div>
+    <p class="story-text" data-story></p>
+  </section>
+
+  <section class="details reveal">
+    <h2 class="orn-title">The Auspicious Day</h2>
+    <div class="detail-card">
+      <div class="d-row"><span class="lbl">Date</span><span data-date-long></span></div>
+      <div class="d-row"><span class="lbl">Poruwa Ceremony</span><span data-time></span></div>
+      <div class="d-row"><span class="lbl">Venue</span><span data-venue-name></span></div>
+      <div class="d-row"><span class="lbl">Address</span><span data-venue-address></span></div>
+      <div class="d-row" data-reception-row><span class="lbl">Reception</span><span data-reception></span></div>
+    </div>
+  </section>
+
+  <section class="gallery reveal" data-gallery-section>
+    <h2 class="orn-title">Cherished Moments</h2>
+    <div class="gallery-grid" data-gallery></div>
+  </section>
+
+  <section class="rsvp reveal">
+    <h2 class="orn-title">Kindly Respond</h2>
+    <form data-thewed-rsvp class="rsvp-form">
+      <label>Your name<input type="text" name="guest_name" required /></label>
+      <label>Will you grace the occasion?
+        <select name="attending"><option value="yes">Yes, with pleasure</option><option value="no">Regretfully unable</option></select>
+      </label>
+      <label>Number in your party<input type="number" name="guest_count" min="0" value="1" /></label>
+      <label>Your blessings<textarea name="message" rows="3"></textarea></label>
+      <button type="submit">Send Response</button>
+      <p class="status" data-rsvp-status></p>
+    </form>
+    <p class="rsvp-phone" data-rsvp-phone></p>
+  </section>
+
+  <footer class="foot">
+    <div class="lotus small" aria-hidden="true"><svg viewBox="0 0 100 60"><use href="#lotus"/></svg></div>
+    <p class="hashtag" data-hashtag></p>
+    <p class="made">TheWed</p>
+  </footer>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="lotus" viewBox="0 0 100 60">
+      <g fill="none" stroke="#c8a24a" stroke-width="1.6">
+        <path d="M50 54 C 46 30, 50 12, 50 8 C 50 12, 54 30, 50 54"/>
+        <path d="M50 54 C 34 34, 30 20, 30 16 C 36 24, 46 40, 50 54"/>
+        <path d="M50 54 C 66 34, 70 20, 70 16 C 64 24, 54 40, 50 54"/>
+        <path d="M50 54 C 20 42, 12 30, 12 26 C 24 34, 42 46, 50 54"/>
+        <path d="M50 54 C 80 42, 88 30, 88 26 C 76 34, 58 46, 50 54"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <script src="/templates/_shared/thewed.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

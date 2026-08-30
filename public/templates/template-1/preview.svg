@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#fffdf9"/>
+  <rect x="14" y="14" width="372" height="272" fill="none" stroke="#b08d57" stroke-width="1"/>
+  <text x="200" y="70" text-anchor="middle" font-family="Georgia, serif" font-size="13" letter-spacing="4" fill="#b08d57">TOGETHER WITH FAMILIES</text>
+  <text x="200" y="130" text-anchor="middle" font-family="Georgia, serif" font-size="42" fill="#46403a">Kavindu</text>
+  <text x="200" y="160" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#b08d57">&amp;</text>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, serif" font-size="42" fill="#46403a">Senali</text>
+  <line x1="130" y1="228" x2="270" y2="228" stroke="#b08d57" stroke-width="1"/>
+  <text x="200" y="255" text-anchor="middle" font-family="Georgia, serif" font-size="16" letter-spacing="2" fill="#46403a">DECEMBER 2026</text>
+  <text x="200" y="20" text-anchor="middle" font-size="0">Classic Elegant</text>
+</svg>
