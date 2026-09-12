@@ -6,7 +6,7 @@ const db = require('../db');
 const config = require('../config');
 const drive = require('../utils/drive');
 const { generateUniqueSlug } = require('../utils/codes');
-const { renderPayload, loadImages, normalizeSchedule } = require('../utils/serialize');
+const { renderPayload, loadImages, normalizeSchedule, loadEvents, EVENT_TYPES } = require('../utils/serialize');
 
 const router = express.Router();
 
@@ -60,6 +60,8 @@ router.get('/public/:slug', async (req, res, next) => {
       created_at: w.created_at,
     }));
 
+    payload.events = await loadEvents(invitation);
+
     return res.json(payload);
   } catch (err) {
     return next(err);
@@ -105,6 +107,7 @@ router.get('/token/:token', async (req, res, next) => {
     payload.invitation.id = ctx.invitation.id;
     payload.publicUrl = ctx.invitation.slug ? `${config.baseUrl}/i/${ctx.invitation.slug}` : null;
     payload.archiveAt = ctx.invitation.archive_at;
+    payload.events = await loadEvents(ctx.invitation);
     return res.json(payload);
   } catch (err) {
     return next(err);
@@ -163,7 +166,88 @@ router.put('/token/:token', async (req, res, next) => {
     await db('invitations').where({ id: ctx.invitation.id }).update(update);
     const refreshed = await db('invitations').where({ id: ctx.invitation.id }).first();
     const images = await loadImages(ctx.invitation.id);
-    return res.json(renderPayload(refreshed, ctx.template, images));
+    const out = renderPayload(refreshed, ctx.template, images);
+    out.events = await loadEvents(refreshed);
+    return res.json(out);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ===========================================================================
+// Events (Phase 1) — CRUD, keyed by magic_link_token
+// ===========================================================================
+
+function cleanEvent(e) {
+  const type = EVENT_TYPES.includes(e.event_type) ? e.event_type : 'Custom';
+  return {
+    event_name: String(e.event_name || '').slice(0, 200),
+    event_type: type,
+    event_date: e.event_date || null,
+    event_time: e.event_time ? String(e.event_time).slice(0, 50) : null,
+    venue_name: e.venue_name ? String(e.venue_name).slice(0, 300) : null,
+    venue_address: e.venue_address ? String(e.venue_address).slice(0, 600) : null,
+    map_link: e.map_link ? String(e.map_link).slice(0, 4000) : null,
+    sort_order: Number.isFinite(Number(e.sort_order)) ? Number(e.sort_order) : 0,
+  };
+}
+
+/** GET /api/invitations/token/:token/events */
+router.get('/token/:token/events', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const events = await db('invitation_events')
+      .where({ invitation_id: ctx.invitation.id })
+      .orderByRaw('sort_order asc, event_date asc nulls last, id asc');
+    return res.json({ events });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/**
+ * PUT /api/invitations/token/:token/events — sync the full event list.
+ * Body: { events: [{ id?, event_name, event_type, event_date, event_time,
+ *                     venue_name, venue_address, map_link, sort_order }] }
+ * Upserts by id, inserts new (no id), deletes rows not present — preserving ids
+ * for untouched events so per-guest access assignments stay valid.
+ */
+router.put('/token/:token/events', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const incoming = Array.isArray(req.body.events) ? req.body.events : [];
+
+    const existing = await db('invitation_events').where({ invitation_id: ctx.invitation.id });
+    const existingIds = new Set(existing.map((e) => e.id));
+    const keptIds = [];
+
+    await db.transaction(async (trx) => {
+      for (let i = 0; i < incoming.length; i += 1) {
+        const raw = incoming[i];
+        const data = cleanEvent({ ...raw, sort_order: raw.sort_order != null ? raw.sort_order : i });
+        const id = Number(raw.id);
+        if (id && existingIds.has(id)) {
+          await trx('invitation_events').where({ id, invitation_id: ctx.invitation.id }).update(data);
+          keptIds.push(id);
+        } else {
+          const [created] = await trx('invitation_events')
+            .insert({ ...data, invitation_id: ctx.invitation.id })
+            .returning('id');
+          keptIds.push(typeof created === 'object' ? created.id : created);
+        }
+      }
+      const toDelete = [...existingIds].filter((eid) => !keptIds.includes(eid));
+      if (toDelete.length) {
+        await trx('invitation_events').whereIn('id', toDelete).del();
+      }
+    });
+
+    const events = await db('invitation_events')
+      .where({ invitation_id: ctx.invitation.id })
+      .orderByRaw('sort_order asc, event_date asc nulls last, id asc');
+    return res.json({ ok: true, events });
   } catch (err) {
     return next(err);
   }
@@ -260,12 +344,16 @@ router.post('/token/:token/publish', async (req, res, next) => {
     if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
     const inv = ctx.invitation;
 
+    // Events (Phase 1) — the new source of dates/venues; single wedding_date is
+    // a legacy fallback so older invitations keep publishing.
+    const events = await loadEvents(inv);
+    const datedEvents = events.filter((e) => e.date);
+
     // Validate required fields.
     const missing = [];
     if (!inv.groom_name) missing.push('groom_name');
     if (!inv.bride_name) missing.push('bride_name');
-    if (!inv.wedding_date) missing.push('wedding_date');
-    if (!inv.venue_name) missing.push('venue_name');
+    if (!datedEvents.length && !inv.wedding_date) missing.push('at least one event with a date');
     if (missing.length) {
       return res.status(400).json({ error: 'Please fill in all required fields before publishing', missing });
     }
@@ -273,9 +361,12 @@ router.post('/token/:token/publish', async (req, res, next) => {
     // Generate slug (keep existing on re-publish).
     const slug = inv.slug || (await generateUniqueSlug(inv.groom_name, inv.bride_name, inv.id));
 
-    // archive_at = wedding_date + 90 days
-    const weddingDate = new Date(inv.wedding_date);
-    const archiveAt = new Date(weddingDate.getTime());
+    // archive_at = latest event date (or wedding_date) + 90 days
+    const dateStrings = datedEvents.map((e) => e.date);
+    if (inv.wedding_date) dateStrings.push(new Date(inv.wedding_date).toISOString().slice(0, 10));
+    const latest = dateStrings.sort().pop();
+    const baseDate = latest ? new Date(latest + 'T00:00:00Z') : new Date();
+    const archiveAt = new Date(baseDate.getTime());
     archiveAt.setUTCDate(archiveAt.getUTCDate() + 90);
 
     await db('invitations').where({ id: inv.id }).update({

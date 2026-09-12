@@ -87,12 +87,17 @@
       ],
     },
     wishes: [{ guest_name: 'Nimal', message: 'Wishing you a lifetime of love and laughter.', created_at: new Date().toISOString() }],
+    events: [
+      { id: 1, name: 'Poruwa Ceremony', type: 'Poruwa', date: nextSaturdayIso(), time: '09:15', venueName: 'Cinnamon Grand', venueAddress: '77 Galle Rd, Colombo 03', mapLink: 'https://maps.google.com/?q=Cinnamon+Grand+Colombo', sortOrder: 0 },
+      { id: 2, name: 'Reception', type: 'Reception', date: nextSaturdayIso(), time: '19:00', venueName: 'The Grand Ballroom', venueAddress: '', mapLink: '', sortOrder: 1 },
+      { id: 3, name: 'Homecoming', type: 'Homecoming', date: nextSaturdayIso(1), time: '18:00', venueName: 'Family Residence, Kandy', venueAddress: '', mapLink: '', sortOrder: 2 },
+    ],
     mode: 'preview',
   };
 
-  function nextSaturdayIso() {
+  function nextSaturdayIso(offset) {
     var d = new Date();
-    d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7) + 120);
+    d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7) + 120 + (offset || 0));
     return d.toISOString().slice(0, 10);
   }
 
@@ -167,28 +172,118 @@
     els.forEach(function (el) { io.observe(el); });
   }
 
-  // ---- Schedule timeline ----
-  function renderSchedule(schedule) {
+  // ---- Events: timeline + primary display + auto-switching countdown ----
+  function eventDateTime(e) {
+    if (!e || !e.date) return null;
+    return parseDate(e.date, e.time);
+  }
+
+  function renderEvents(data) {
+    var events = (data.events && data.events.length) ? data.events.slice() : fallbackEvents(data.invitation);
+    events.sort(function (a, b) {
+      var da = eventDateTime(a), db2 = eventDateTime(b);
+      if (da && db2) return da - db2;
+      if (da) return -1;
+      if (db2) return 1;
+      return (a.sortOrder || 0) - (b.sortOrder || 0);
+    });
+
+    // Timeline (shown when there are 2+ events)
     var wrap = document.querySelector('[data-schedule]');
     var section = document.querySelector('[data-schedule-section]');
-    schedule = Array.isArray(schedule) ? schedule : [];
     if (wrap) {
-      wrap.innerHTML = schedule.map(function (it) {
+      wrap.innerHTML = events.map(function (e) {
+        var when = [formatDate(e.date), e.time ? formatTime(e.time) : ''].filter(Boolean).join(' · ');
+        var showType = e.type && e.type !== 'Custom' && String(e.name || '').toLowerCase().indexOf(e.type.toLowerCase()) < 0;
+        var typeLabel = showType ? ('<span class="tw-tl-type">' + escapeHtml(e.type) + '</span>') : '';
         return '<div class="tw-tl-item">' +
           '<div class="tw-tl-dot"></div>' +
           '<div class="tw-tl-body">' +
-          (it.time ? '<div class="tw-tl-time">' + escapeHtml(it.time) + '</div>' : '') +
-          '<div class="tw-tl-name">' + escapeHtml(it.name) + '</div>' +
-          (it.venue ? '<div class="tw-tl-venue">' + escapeHtml(it.venue) + '</div>' : '') +
+          (when ? '<div class="tw-tl-time">' + escapeHtml(when) + '</div>' : '') +
+          '<div class="tw-tl-name">' + escapeHtml(e.name) + ' ' + typeLabel + '</div>' +
+          (e.venueName ? '<div class="tw-tl-venue">' + escapeHtml(e.venueName) + '</div>' : '') +
+          (e.mapLink ? '<a class="tw-tl-map" href="' + escapeHtml(mapHref(e.mapLink)) + '" target="_blank" rel="noopener">' + t('directions') + '</a>' : '') +
           '</div></div>';
       }).join('');
     }
-    if (section) section.style.display = schedule.length ? '' : 'none';
+    if (section) section.style.display = events.length >= 2 ? '' : 'none';
+
+    // Primary event drives the headline date/venue display
+    var primary = events[0] || {};
+    document.querySelectorAll('[data-date-long]').forEach(function (el) { el.textContent = primary.date ? formatDate(primary.date, { withDay: true }) : ''; });
+    document.querySelectorAll('[data-venue-name]').forEach(function (el) { el.textContent = primary.venueName || ''; });
+    TheWed.setText('[data-venue-address]', primary.venueAddress || '');
+    TheWed.setText('[data-time]', primary.time ? formatTime(primary.time) : '');
+
+    // Map from the primary event (fallback: first event that has a link)
+    var mapLink = primary.mapLink || (events.find ? (events.find(function (e) { return e.mapLink; }) || {}).mapLink : '') || '';
+    wireMap(mapLink);
+
+    startEventCountdown(events);
+  }
+
+  function fallbackEvents(inv) {
+    if (!inv) return [];
+    if (inv.weddingDate || inv.venueName) {
+      return [{ name: 'Wedding', type: 'Custom', date: inv.weddingDate || '', time: inv.weddingTime || '',
+        venueName: inv.venueName || '', venueAddress: inv.venueAddress || '', mapLink: inv.mapLink || '', sortOrder: 0 }];
+    }
+    return [];
+  }
+
+  function formatTime(tstr) {
+    var m = /^(\d{2}):(\d{2})/.exec(tstr || ''); if (!m) return tstr || '';
+    var h = +m[1], mm = m[2], ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + mm + ' ' + ap;
+  }
+
+  function mapHref(link) {
+    var m = /<iframe[^>]*src=["']([^"']+)["']/i.exec(link || '');
+    return m ? m[1] : link;
+  }
+
+  function startEventCountdown(events) {
+    var cdEl = document.querySelector('[data-countdown]');
+    var todayEl = document.querySelector('[data-today]');
+    function pickTarget() {
+      var now = Date.now();
+      var upcoming = events.map(eventDateTime).filter(Boolean).filter(function (d) { return d.getTime() > now; });
+      upcoming.sort(function (a, b) { return a - b; });
+      return upcoming[0] || null;
+    }
+    function anyToday() {
+      return events.some(function (e) { return isWeddingToday(e.date); });
+    }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function tick() {
+      var target = pickTarget();
+      if (!target) {
+        if (anyToday()) {
+          if (todayEl) { todayEl.textContent = t('today'); todayEl.style.display = ''; }
+          if (cdEl) cdEl.style.display = 'none';
+        } else {
+          if (todayEl) todayEl.style.display = 'none';
+          if (cdEl) cdEl.style.display = 'none';
+        }
+        return;
+      }
+      if (todayEl) todayEl.style.display = 'none';
+      if (cdEl) cdEl.style.display = '';
+      var diff = target.getTime() - Date.now();
+      var s = Math.max(0, Math.floor(diff / 1000));
+      setCd('[data-cd-days]', Math.floor(s / 86400));
+      setCd('[data-cd-hours]', pad(Math.floor((s % 86400) / 3600)));
+      setCd('[data-cd-mins]', pad(Math.floor((s % 3600) / 60)));
+      setCd('[data-cd-secs]', pad(s % 60));
+    }
+    function setCd(sel, v) { var el = document.querySelector(sel); if (el) el.textContent = v; }
+    tick();
+    if (TheWed._cd) clearInterval(TheWed._cd);
+    TheWed._cd = setInterval(tick, 1000);
   }
 
   // ---- Venue map / directions ----
-  function wireMap(inv) {
-    var link = (inv.mapLink || '').trim();
+  function wireMap(link) {
+    link = (link || '').trim();
     var btn = document.querySelector('[data-directions]');
     var embed = document.querySelector('[data-map-embed]');
     var section = document.querySelector('[data-map-section]');
@@ -459,8 +554,7 @@
         currentLang = (data.invitation && I18N[data.invitation.languageDefault]) ? data.invitation.languageDefault : 'en';
         try { render(data); } catch (e) { console.error('render error', e); }
         // Shared behaviors
-        renderSchedule(data.invitation.schedule);
-        wireMap(data.invitation);
+        renderEvents(data);
         wireGalleryLightbox();
         wireMusic(data.invitation);
         currentWishes = data.wishes || currentWishes;

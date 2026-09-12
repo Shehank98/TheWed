@@ -36,11 +36,6 @@
     TheWed.setText('[data-hashtag]', cf.hashtag || '');
     TheWed.setText('[data-rsvp-phone]', cf.rsvp_phone ? ('RSVP by phone: ' + cf.rsvp_phone) : '');
 
-    TheWed.startCountdown(inv.weddingDate, inv.weddingTime, function (c) {
-      if (!c) return;
-      set('[data-cd-days]', c.days); set('[data-cd-hours]', c.hours);
-      set('[data-cd-mins]', c.minutes); set('[data-cd-secs]', c.seconds);
-    });
 
     TheWed.revealOnScroll('.reveal');
   }

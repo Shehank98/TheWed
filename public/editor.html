@@ -59,11 +59,10 @@
         </fieldset>
 
         <fieldset>
-          <legend>When &amp; where</legend>
-          <div class="field"><label>Wedding date *</label><input type="date" id="wedding_date" /></div>
-          <div class="field"><label>Wedding time</label><input type="time" id="wedding_time" /></div>
-          <div class="field"><label>Venue name *</label><input type="text" id="venue_name" /></div>
-          <div class="field"><label>Venue address</label><textarea id="venue_address"></textarea></div>
+          <legend>Events</legend>
+          <p class="hint" style="margin:0 0 10px;">Add each event (Poruwa, Church, Reception, Homecoming…). Each has its own date, time, venue and map. The countdown targets the next upcoming event and the schedule shows them in order.</p>
+          <div id="event-rows"></div>
+          <button type="button" class="btn ghost small" id="add-event-row">+ Add event</button>
         </fieldset>
 
         <fieldset>
@@ -72,19 +71,7 @@
         </fieldset>
 
         <fieldset>
-          <legend>Event schedule</legend>
-          <p class="hint" style="margin:0 0 10px;">Add each part of the day (e.g. Ceremony, Reception). Shown as a timeline.</p>
-          <div id="schedule-rows"></div>
-          <button type="button" class="btn ghost small" id="add-schedule-row">+ Add event</button>
-        </fieldset>
-
-        <fieldset>
-          <legend>Map, music &amp; language</legend>
-          <div class="field">
-            <label>Venue map link or embed code</label>
-            <input type="text" id="map_link" placeholder="https://maps.google.com/... or full <iframe> embed" />
-            <div class="hint">Paste a Google Maps link (adds a “Get Directions” button) or an embed code (shows a map).</div>
-          </div>
+          <legend>Music &amp; language</legend>
           <div class="field">
             <label>Background music (MP3 URL)</label>
             <input type="text" id="music_url" placeholder="https://.../song.mp3" />
@@ -199,7 +186,7 @@
     }
     function previewPayload() {
       return { template: state.template, invitation: state.invitation, images: state.images,
-        publicUrl: state.publicUrl || '', mode: 'preview' };
+        events: state.events || [], publicUrl: state.publicUrl || '', mode: 'preview' };
     }
     window.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'thewed:ready') { ready = true; postPreview(); }
@@ -228,85 +215,133 @@
       }
     }
 
+    const EVENT_TYPES = ['Poruwa', 'Church', 'Reception', 'Homecoming', 'Custom'];
+
     function fillForm() {
       const inv = state.invitation;
       document.getElementById('groom_name').value = inv.groomName || '';
       document.getElementById('bride_name').value = inv.brideName || '';
-      document.getElementById('wedding_date').value = inv.weddingDate || '';
-      document.getElementById('wedding_time').value = inv.weddingTime || '';
-      document.getElementById('venue_name').value = inv.venueName || '';
-      document.getElementById('venue_address').value = inv.venueAddress || '';
       document.getElementById('story_text').value = inv.storyText || '';
-      document.getElementById('map_link').value = inv.mapLink || '';
       document.getElementById('music_url').value = inv.musicUrl || '';
       document.getElementById('language_default').value = inv.languageDefault || 'en';
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
-      renderScheduleRows(inv.schedule || []);
+      loadEventRows();
     }
 
-    // ---- schedule repeater ----
-    function renderScheduleRows(items) {
-      const wrap = document.getElementById('schedule-rows');
+    // ---- events repeater ----
+    async function loadEventRows() {
+      const wrap = document.getElementById('event-rows');
       wrap.innerHTML = '';
-      (items || []).forEach((it) => addScheduleRow(it));
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/events');
+        const data = await res.json();
+        (data.events || []).forEach((ev) => addEventRow(ev));
+      } catch (e) { /* ignore */ }
+      if (!document.querySelectorAll('#event-rows .event-row').length) addEventRow();
+      syncPreviewEvents();
+      postPreview();
     }
-    function addScheduleRow(it) {
-      it = it || { name: '', time: '', venue: '' };
-      const wrap = document.getElementById('schedule-rows');
+    function opt(list, sel) { return list.map((v) => `<option value="${v}"${v === sel ? ' selected' : ''}>${v}</option>`).join(''); }
+    function addEventRow(ev) {
+      ev = ev || {};
+      const wrap = document.getElementById('event-rows');
       const row = document.createElement('div');
-      row.className = 'sched-row';
-      row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:8px;align-items:center;';
+      row.className = 'event-row';
+      row.dataset.id = ev.id || '';
+      row.style.cssText = 'border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#faf8f4;';
       row.innerHTML =
-        '<input type="text" class="s-name" placeholder="Event (e.g. Ceremony)" style="grid-column:1 / span 2;" />' +
-        '<input type="text" class="s-time" placeholder="Time" />' +
-        '<input type="text" class="s-venue" placeholder="Venue" />' +
-        '<button type="button" class="btn danger small s-del">✕</button>';
-      row.querySelector('.s-name').value = it.name || '';
-      row.querySelector('.s-time').value = it.time || '';
-      row.querySelector('.s-venue').value = it.venue || '';
-      row.querySelectorAll('input').forEach((inp) => inp.addEventListener('input', onInput));
-      row.querySelector('.s-del').addEventListener('click', () => { row.remove(); onInput(); });
+        '<div style="display:grid;grid-template-columns:1fr 130px;gap:6px;">' +
+          '<input type="text" class="e-name" placeholder="Event name (e.g. Poruwa Ceremony)" />' +
+          `<select class="e-type">${opt(EVENT_TYPES, ev.event_type || 'Custom')}</select>` +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">' +
+          '<input type="date" class="e-date" />' +
+          '<input type="time" class="e-time" />' +
+        '</div>' +
+        '<input type="text" class="e-venue" placeholder="Venue name" style="margin-top:6px;" />' +
+        '<input type="text" class="e-map" placeholder="Google Maps link (optional)" style="margin-top:6px;" />' +
+        '<div class="e-private-wrap" style="margin-top:8px;"></div>' +
+        '<button type="button" class="btn danger small e-del" style="margin-top:8px;">Remove event</button>';
+      row.querySelector('.e-name').value = ev.event_name || '';
+      row.querySelector('.e-date').value = ev.event_date ? String(ev.event_date).slice(0, 10) : '';
+      row.querySelector('.e-time').value = ev.event_time || '';
+      row.querySelector('.e-venue').value = ev.venue_name || '';
+      row.querySelector('.e-map').value = ev.map_link || '';
+      row.querySelectorAll('input, select').forEach((inp) => {
+        inp.addEventListener('input', onEventInput);
+        if (inp.tagName === 'SELECT') inp.addEventListener('change', onEventInput);
+      });
+      row.querySelector('.e-del').addEventListener('click', () => { row.remove(); onEventInput(); });
       wrap.appendChild(row);
+      if (window.renderPrivateToggle) window.renderPrivateToggle(row, ev); // Phase 2 hook
     }
-    function collectSchedule() {
-      return Array.prototype.map.call(document.querySelectorAll('#schedule-rows .sched-row'), (row) => ({
-        name: row.querySelector('.s-name').value.trim(),
-        time: row.querySelector('.s-time').value.trim(),
-        venue: row.querySelector('.s-venue').value.trim(),
-      })).filter((it) => it.name || it.time || it.venue);
+    function collectEvents() {
+      return Array.prototype.map.call(document.querySelectorAll('#event-rows .event-row'), (row, i) => {
+        const o = {
+          event_name: row.querySelector('.e-name').value.trim(),
+          event_type: row.querySelector('.e-type').value,
+          event_date: row.querySelector('.e-date').value || null,
+          event_time: row.querySelector('.e-time').value || null,
+          venue_name: row.querySelector('.e-venue').value.trim() || null,
+          map_link: row.querySelector('.e-map').value.trim() || null,
+          sort_order: i,
+        };
+        if (row.dataset.id) o.id = Number(row.dataset.id);
+        if (row.dataset.isPrivate != null) o.is_private = row.dataset.isPrivate === 'true';
+        return o;
+      }).filter((e) => e.event_name || e.event_date || e.venue_name);
     }
-    document.getElementById('add-schedule-row').addEventListener('click', () => { addScheduleRow(); });
-
-    // camelCase <-> snake mapping for the invitation object used by preview
-    const CAMEL = {
-      groom_name: 'groomName', bride_name: 'brideName', wedding_date: 'weddingDate',
-      wedding_time: 'weddingTime', venue_name: 'venueName', venue_address: 'venueAddress',
-      story_text: 'storyText',
-    };
+    // Build the normalized events array the template preview expects
+    function syncPreviewEvents() {
+      state.events = collectEvents().map((e) => ({
+        id: e.id || null, name: e.event_name || (e.event_type !== 'Custom' ? e.event_type : 'Event'),
+        type: e.event_type, date: e.event_date || '', time: e.event_time || '',
+        venueName: e.venue_name || '', venueAddress: '', mapLink: e.map_link || '',
+        sortOrder: e.sort_order, isPrivate: !!e.is_private,
+      }));
+    }
+    let eventSaveTimer = null;
+    function onEventInput() {
+      syncPreviewEvents();
+      postPreview();
+      saveState.textContent = 'Saving…';
+      clearTimeout(eventSaveTimer);
+      eventSaveTimer = setTimeout(saveEvents, 700);
+    }
+    async function saveEvents() {
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/events', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: collectEvents() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error('save failed');
+        // re-map ids onto rows so new rows become updatable
+        const rows = document.querySelectorAll('#event-rows .event-row');
+        (data.events || []).forEach((ev, i) => { if (rows[i]) rows[i].dataset.id = ev.id; });
+        saveState.textContent = 'Saved ' + new Date().toLocaleTimeString();
+      } catch (e) { saveState.textContent = 'Could not save events'; }
+    }
+    document.getElementById('add-event-row').addEventListener('click', () => { addEventRow(); });
 
     function collect() {
-      const body = {};
-      Object.keys(CAMEL).forEach((snake) => {
-        const val = document.getElementById(snake).value;
-        body[snake] = val;
-        state.invitation[CAMEL[snake]] = val;
-      });
+      const body = {
+        groom_name: document.getElementById('groom_name').value,
+        bride_name: document.getElementById('bride_name').value,
+        story_text: document.getElementById('story_text').value,
+        music_url: document.getElementById('music_url').value,
+        language_default: document.getElementById('language_default').value,
+      };
+      state.invitation.groomName = body.groom_name;
+      state.invitation.brideName = body.bride_name;
+      state.invitation.storyText = body.story_text;
+      state.invitation.musicUrl = body.music_url;
+      state.invitation.languageDefault = body.language_default;
       const cf = {};
       document.querySelectorAll('[data-cf]').forEach((el) => { if (el.value) cf[el.dataset.cf] = el.value; });
       body.custom_fields = cf;
       state.invitation.customFields = cf;
-
-      // Extended fields
-      const schedule = collectSchedule();
-      body.schedule = schedule;
-      state.invitation.schedule = schedule;
-      body.map_link = document.getElementById('map_link').value;
-      state.invitation.mapLink = body.map_link;
-      body.music_url = document.getElementById('music_url').value;
-      state.invitation.musicUrl = body.music_url;
-      body.language_default = document.getElementById('language_default').value;
-      state.invitation.languageDefault = body.language_default;
       return body;
     }
 
@@ -413,6 +448,7 @@
       const btn = document.getElementById('publish-btn');
       btn.disabled = true; btn.textContent = 'Publishing…';
       await save();
+      await saveEvents();
       try {
         const res = await api('/token/' + encodeURIComponent(token) + '/publish', { method: 'POST' });
         const data = await res.json();
