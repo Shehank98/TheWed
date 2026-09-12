@@ -38,6 +38,12 @@
 
   <!-- DASHBOARD -->
   <main class="container" id="dash-view" style="padding:30px 20px;display:none;">
+    <div class="stat-row" id="stat-row">
+      <div class="stat"><div class="n" id="stat-pending">–</div><div class="l">Orders awaiting payment</div></div>
+      <div class="stat"><div class="n" id="stat-paid">–</div><div class="l">Paid orders</div></div>
+      <div class="stat"><div class="n" id="stat-published">–</div><div class="l">Published invitations</div></div>
+      <div class="stat"><div class="n" id="stat-drafts">–</div><div class="l">Drafts in progress</div></div>
+    </div>
     <div class="tabs">
       <div class="tab active" data-tab="orders">Orders</div>
       <div class="tab" data-tab="invitations">Invitations</div>
@@ -96,6 +102,21 @@
         await fetch('/api/admin/logout', { method: 'POST' }); showLogin();
       });
       loadOrders();
+      loadStats();
+    }
+
+    async function loadStats() {
+      try {
+        const [o, i] = await Promise.all([
+          fetch('/api/admin/orders').then((r) => r.json()),
+          fetch('/api/admin/invitations').then((r) => r.json()),
+        ]);
+        const orders = o.orders || [], invs = i.invitations || [];
+        document.getElementById('stat-pending').textContent = orders.filter((x) => x.status === 'pending_payment').length;
+        document.getElementById('stat-paid').textContent = orders.filter((x) => x.status === 'paid').length;
+        document.getElementById('stat-published').textContent = invs.filter((x) => x.status === 'published').length;
+        document.getElementById('stat-drafts').textContent = invs.filter((x) => x.status === 'draft').length;
+      } catch (e) { /* ignore */ }
     }
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -164,6 +185,7 @@
       msg.className = 'notice ok';
       msg.innerHTML = 'Marked paid. ' + esc(emailNote);
       loadOrders();
+      loadStats();
     }
 
     // ---- Invitations ----
