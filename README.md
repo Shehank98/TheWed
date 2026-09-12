@@ -167,4 +167,55 @@ flips any past-due published invitation to `archived`:
 3. `railway.json` runs `migrate → seed → start` on deploy.
 4. (Optional) Add a Railway cron service running `npm run archive` daily, and set
    `DISABLE_CRON=true` on the web service to avoid running it twice.
-```
+
+---
+
+## Feature set (v2 extension)
+
+All 5 templates and the editor now include:
+
+| # | Feature | Notes |
+|---|---------|-------|
+| 1 | Countdown | Live d/h/m/s; swaps to “Today’s the day!” on the wedding date. |
+| 2 | Event schedule | Editable name/time/venue items, rendered as a timeline. |
+| 3 | Venue map | Google Maps link or embed; “Get Directions” button. |
+| 4 | Photo gallery | Shared lightbox (prev/next, keyboard, lazy-loaded). |
+| 5 | Background music | Optional MP3; muted autoplay + floating mute/unmute button. |
+| 6 | Guestbook | Public wishes wall + dashboard moderation (approve/hide/delete). |
+| 7 | RSVP+ | Optional meal preference (per-invitation toggle) + live “X guests confirmed” counter. |
+| 8 | Personalized links | `?to=Name` → “Dear Name”; guest list mgmt + Excel export. |
+| 9 | Share + QR | WhatsApp share button; server-side QR (qrcode) of the invite URL. |
+| 10 | Multi-language | Sinhala / Tamil / English label switcher; couple’s own text unchanged. |
+
+### Schema additions
+
+- `invitations`: `schedule` (JSONB `[{name,time,venue}]`), `map_link`, `music_url`,
+  `language_default` (`en`/`si`/`ta`), `meal_pref_enabled` (bool).
+- `rsvps`: `meal_preference`.
+- New tables: `guest_wishes` (id, invitation_id, guest_name, message, approved, created_at)
+  and `guest_list` (id, invitation_id, guest_name, created_at).
+
+### New API endpoints
+
+- `GET  /api/invitations/public/:slug/stats` — live confirmed-guest count.
+- `GET  /api/invitations/public/:slug/wishes` — approved wishes.
+- `POST /api/wishes/:slug` — submit a guestbook wish.
+- `GET/PATCH/DELETE /api/invitations/token/:token/wishes[/:id]` — moderation.
+- `GET/POST/DELETE /api/invitations/token/:token/guests[/:id]` + `/guests/export` — guest list.
+- `GET  /api/invitations/token/:token/qr[?download=1]` — PNG QR of the public URL.
+
+### Templates runtime
+
+Shared behavior lives in [`public/templates/_shared/thewed.js`](./public/templates/_shared/thewed.js).
+Templates supply styled containers with `data-*` hooks (`data-schedule`, `data-directions`,
+`data-guestbook-section`, `data-confirmed-count`, `data-meal-field`, `data-guest-greeting`,
+`data-share-whatsapp`, `data-today`) and `data-i18n` labels; the runtime fills them and
+handles i18n, the lightbox, music, guestbook, RSVP counter, personalization and share.
+
+### The public/edit link and your domain
+
+Links are built from `APP_BASE_URL`. Locally that’s `http://localhost:3000`; in production
+set it to your domain (e.g. `https://www.zenvite.online`) and every link updates —
+magic links become `https://www.zenvite.online/edit/<token>` and public invites become
+`https://www.zenvite.online/i/<groom>-<bride>` (the slug is generated from the couple’s
+names, lowercased).
