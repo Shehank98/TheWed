@@ -212,6 +212,21 @@ Templates supply styled containers with `data-*` hooks (`data-schedule`, `data-d
 `data-share-whatsapp`, `data-today`) and `data-i18n` labels; the runtime fills them and
 handles i18n, the lightbox, music, guestbook, RSVP counter, personalization and share.
 
+### Editable bank details & template prices (admin panel)
+
+Bank transfer details and template prices/names are editable at runtime from the
+admin panel — no redeploy needed:
+
+- **Bank Settings tab** → edit bank name, account name/number, branch, SWIFT.
+  Saved to a `settings` table (key `bank`) and shown to customers on the order
+  page. The `BANK_*` env vars are only the initial defaults.
+- **Templates & Prices tab** → edit each template's display name and price.
+  New orders use the updated price immediately. The templates seed is
+  insert-only, so these edits survive re-deploys (`knex seed:run`).
+
+Admin endpoints: `GET/PUT /api/admin/settings/bank`, `GET /api/admin/templates`,
+`PUT /api/admin/templates/:id` (`name`, `price`, `animation_style`, `preview_url`).
+
 ### The public/edit link and your domain
 
 Links are built from `APP_BASE_URL`. Locally that’s `http://localhost:3000`; in production

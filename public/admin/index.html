@@ -47,6 +47,8 @@
     <div class="tabs">
       <div class="tab active" data-tab="orders">Orders</div>
       <div class="tab" data-tab="invitations">Invitations</div>
+      <div class="tab" data-tab="templates">Templates &amp; Prices</div>
+      <div class="tab" data-tab="settings">Bank Settings</div>
     </div>
 
     <div id="tab-orders">
@@ -80,6 +82,29 @@
       <div class="table-wrap"><table id="inv-table"><thead><tr>
         <th>Couple</th><th>Customer</th><th>Template</th><th>Status</th><th>Slug</th><th>Archive at</th><th>Actions</th>
       </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div id="tab-templates" style="display:none;">
+      <div class="toolbar"><strong>Templates &amp; prices</strong><button class="btn ghost small" id="tpl-refresh">Refresh</button></div>
+      <p class="hint" style="margin-bottom:14px;">Edit the name and price shown to customers in the storefront. New orders use the updated price immediately.</p>
+      <div id="tpl-msg"></div>
+      <div class="table-wrap"><table id="tpl-table"><thead><tr>
+        <th>Folder</th><th>Name</th><th>Price (LKR)</th><th></th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div id="tab-settings" style="display:none;">
+      <div class="panel narrow" style="max-width:520px;">
+        <h3 class="serif" style="margin-top:0;">Bank transfer details</h3>
+        <p class="hint">These are shown to customers on the order page and used for payment.</p>
+        <div id="bank-msg"></div>
+        <div class="field"><label>Bank name</label><input type="text" id="bank-bankName" /></div>
+        <div class="field"><label>Account name</label><input type="text" id="bank-accountName" /></div>
+        <div class="field"><label>Account number</label><input type="text" id="bank-accountNumber" /></div>
+        <div class="field"><label>Branch</label><input type="text" id="bank-branch" /></div>
+        <div class="field"><label>SWIFT (optional)</label><input type="text" id="bank-swift" /></div>
+        <button class="btn" id="bank-save">Save bank details</button>
+      </div>
     </div>
   </main>
 
@@ -135,13 +160,16 @@
     });
 
     // Tabs
+    const PANELS = ['orders', 'invitations', 'templates', 'settings'];
     document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      const orders = tab.dataset.tab === 'orders';
-      document.getElementById('tab-orders').style.display = orders ? '' : 'none';
-      document.getElementById('tab-invitations').style.display = orders ? 'none' : '';
-      if (orders) loadOrders(); else loadInvitations();
+      const which = tab.dataset.tab;
+      PANELS.forEach((p) => { document.getElementById('tab-' + p).style.display = which === p ? '' : 'none'; });
+      if (which === 'orders') loadOrders();
+      if (which === 'invitations') loadInvitations();
+      if (which === 'templates') loadTemplatesAdmin();
+      if (which === 'settings') loadBank();
     }));
 
     function money(v) { return 'LKR ' + Number(v).toLocaleString('en-LK'); }
@@ -245,6 +273,62 @@
     }
     document.getElementById('inv-filter').addEventListener('change', loadInvitations);
     document.getElementById('inv-refresh').addEventListener('click', loadInvitations);
+
+    // ---- Templates & prices ----
+    async function loadTemplatesAdmin() {
+      const tbody = document.querySelector('#tpl-table tbody');
+      tbody.innerHTML = '<tr><td colspan="4">Loading…</td></tr>';
+      const res = await fetch('/api/admin/templates');
+      if (!res.ok) { tbody.innerHTML = '<tr><td colspan="4">Failed to load.</td></tr>'; return; }
+      const { templates } = await res.json();
+      tbody.innerHTML = templates.map((t) => `
+        <tr data-tid="${t.id}">
+          <td><code>${esc(t.folder_key)}</code></td>
+          <td><input type="text" class="t-name" value="${esc(t.name)}" style="min-width:180px;" /></td>
+          <td><input type="number" class="t-price" value="${Number(t.price)}" min="0" step="0.01" style="width:130px;" /></td>
+          <td><button class="btn small" data-tsave="${t.id}">Save</button></td>
+        </tr>`).join('');
+      tbody.querySelectorAll('[data-tsave]').forEach((b) => b.addEventListener('click', () => saveTemplate(b.dataset.tsave, b)));
+    }
+    async function saveTemplate(id, btn) {
+      const row = document.querySelector('#tpl-table tr[data-tid="' + id + '"]');
+      const name = row.querySelector('.t-name').value;
+      const price = row.querySelector('.t-price').value;
+      const msg = document.getElementById('tpl-msg');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const res = await fetch('/api/admin/templates/' + id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, price }),
+      });
+      const data = await res.json();
+      msg.className = res.ok ? 'notice ok' : 'notice err';
+      msg.textContent = res.ok ? ('Saved ' + data.template.name + ' — ' + money(data.template.price)) : (data.error || 'Failed');
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+    document.getElementById('tpl-refresh').addEventListener('click', loadTemplatesAdmin);
+
+    // ---- Bank settings ----
+    async function loadBank() {
+      const res = await fetch('/api/admin/settings/bank');
+      if (!res.ok) return;
+      const { bank } = await res.json();
+      ['bankName', 'accountName', 'accountNumber', 'branch', 'swift'].forEach((f) => {
+        const el = document.getElementById('bank-' + f);
+        if (el) el.value = bank[f] || '';
+      });
+    }
+    document.getElementById('bank-save').addEventListener('click', async () => {
+      const msg = document.getElementById('bank-msg');
+      const body = {};
+      ['bankName', 'accountName', 'accountNumber', 'branch', 'swift'].forEach((f) => { body[f] = document.getElementById('bank-' + f).value; });
+      const btn = document.getElementById('bank-save');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const res = await fetch('/api/admin/settings/bank', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      msg.className = res.ok ? 'notice ok' : 'notice err';
+      msg.textContent = res.ok ? 'Bank details saved.' : 'Could not save.';
+      btn.disabled = false; btn.textContent = 'Save bank details';
+    });
 
     checkAuth();
   </script>

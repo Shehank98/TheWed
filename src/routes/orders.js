@@ -2,18 +2,9 @@ const express = require('express');
 const db = require('../db');
 const config = require('../config');
 const { generateReferenceCode } = require('../utils/codes');
+const { getBankDetails } = require('../utils/settings');
 
 const router = express.Router();
-
-function bankDetails() {
-  return {
-    bankName: config.bank.name,
-    accountName: config.bank.accountName,
-    accountNumber: config.bank.accountNumber,
-    branch: config.bank.branch,
-    swift: config.bank.swift,
-  };
-}
 
 function isEmail(str) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(str || ''));
@@ -61,7 +52,7 @@ router.post('/', async (req, res, next) => {
         template: { id: template.id, name: template.name },
         created_at: order.created_at,
       },
-      bank: bankDetails(),
+      bank: await getBankDetails(),
       instructionsUrl: `${config.baseUrl}/order/${order.reference_code}`,
     });
   } catch (err) {
@@ -96,7 +87,7 @@ router.get('/:reference_code', async (req, res, next) => {
         created_at: order.created_at,
         paid_at: order.paid_at,
       },
-      bank: order.status === 'pending_payment' ? bankDetails() : null,
+      bank: order.status === 'pending_payment' ? await getBankDetails() : null,
       invitationReady: Boolean(invitation),
     });
   } catch (err) {

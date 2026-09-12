@@ -9,6 +9,7 @@ const {
 } = require('../middleware/adminAuth');
 const { generateMagicLinkToken } = require('../utils/codes');
 const { sendEmail, paymentConfirmedEmail } = require('../utils/email');
+const { getBankDetails, saveBankDetails } = require('../utils/settings');
 
 const router = express.Router();
 
@@ -225,6 +226,73 @@ router.post('/invitations/:id/status', async (req, res, next) => {
       updated_at: db.fn.now(),
     });
     return res.json({ ok: true, status });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ===========================================================================
+// Settings — bank details (shown to customers for payment)
+// ===========================================================================
+
+/** GET /api/admin/settings/bank */
+router.get('/settings/bank', async (req, res, next) => {
+  try {
+    return res.json({ bank: await getBankDetails() });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/** PUT /api/admin/settings/bank */
+router.put('/settings/bank', async (req, res, next) => {
+  try {
+    const bank = await saveBankDetails(req.body || {});
+    return res.json({ ok: true, bank });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ===========================================================================
+// Templates — edit name / price / style shown in the storefront
+// ===========================================================================
+
+/** GET /api/admin/templates — full list for the admin editor. */
+router.get('/templates', async (req, res, next) => {
+  try {
+    const templates = await db('templates').orderBy('id', 'asc');
+    return res.json({ templates });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/** PUT /api/admin/templates/:id — update name, price, animation_style, preview_url. */
+router.put('/templates/:id', async (req, res, next) => {
+  try {
+    const tpl = await db('templates').where({ id: req.params.id }).first();
+    if (!tpl) return res.status(404).json({ error: 'Template not found' });
+
+    const update = {};
+    if ('name' in req.body) {
+      const name = String(req.body.name || '').trim();
+      if (!name) return res.status(400).json({ error: 'Name cannot be empty' });
+      update.name = name.slice(0, 200);
+    }
+    if ('price' in req.body) {
+      const price = Number(req.body.price);
+      if (!Number.isFinite(price) || price < 0) return res.status(400).json({ error: 'Invalid price' });
+      update.price = price;
+    }
+    if ('animation_style' in req.body) update.animation_style = String(req.body.animation_style || '').slice(0, 100);
+    if ('preview_url' in req.body) update.preview_url = String(req.body.preview_url || '').slice(0, 500);
+
+    if (!Object.keys(update).length) return res.status(400).json({ error: 'Nothing to update' });
+
+    await db('templates').where({ id: tpl.id }).update(update);
+    const refreshed = await db('templates').where({ id: tpl.id }).first();
+    return res.json({ ok: true, template: refreshed });
   } catch (err) {
     return next(err);
   }

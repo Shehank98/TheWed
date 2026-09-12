@@ -48,12 +48,16 @@ exports.seed = async function seed(knex) {
   for (const tpl of TEMPLATES) {
     const existing = await knex('templates').where({ folder_key: tpl.folder_key }).first();
     if (existing) {
-      await knex('templates').where({ folder_key: tpl.folder_key }).update({
-        name: tpl.name,
-        animation_style: tpl.animation_style,
-        preview_url: tpl.preview_url,
-        price: tpl.price,
-      });
+      // Insert-only: never overwrite an existing template. Admins can edit the
+      // name/price in the panel, and those edits must survive re-deploys (which
+      // run `knex seed:run`). Only backfill the structural preview/animation
+      // fields if they are blank.
+      const patch = {};
+      if (!existing.preview_url) patch.preview_url = tpl.preview_url;
+      if (!existing.animation_style) patch.animation_style = tpl.animation_style;
+      if (Object.keys(patch).length) {
+        await knex('templates').where({ folder_key: tpl.folder_key }).update(patch);
+      }
     } else {
       await knex('templates').insert(tpl);
     }
