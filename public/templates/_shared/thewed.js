@@ -65,7 +65,7 @@
     invitation: {
       groomName: 'Kavindu', brideName: 'Senali', weddingDate: nextSaturdayIso(), weddingTime: '17:30',
       venueName: 'The Grand Ballroom', venueAddress: 'Cinnamon Grand, 77 Galle Rd, Colombo 03',
-      storyText: 'What began as a chance meeting under Colombo rain became a love we never saw coming. Five years, countless cups of tea, and one very good dog later — we are ready to say “I do”.',
+      storyText: 'What began as a chance meeting under Colombo rain became a love we never saw coming. Five years, countless cups of tea, and one very good dog later, we are ready to say “I do”.',
       customFields: { hashtag: '#KavinduWedsSenali', rsvp_phone: '+94 77 123 4567', nekath: '9:15 AM' },
       schedule: [
         { name: 'Poruwa Ceremony', time: '9:15 AM', venue: 'Main Hall' },
@@ -73,12 +73,20 @@
         { name: 'Evening Party', time: '7:00 PM', venue: 'The Grand Ballroom' },
       ],
       mapLink: 'https://maps.google.com/?q=Cinnamon+Grand+Colombo',
-      musicUrl: '', languageDefault: 'en', mealPrefEnabled: true,
+      musicUrl: '', languageDefault: 'en',
       slug: '', status: 'preview',
     },
-    images: { hero: null, couple: [], gallery: [] },
-    wishes: [{ guest_name: 'Nimal', message: 'Wishing you a lifetime of love and laughter!', created_at: new Date().toISOString() }],
-    stats: { confirmedGuests: 42 },
+    images: {
+      hero: { url: '/templates/_shared/samples/hero.svg' },
+      couple: [{ url: '/templates/_shared/samples/couple.svg' }],
+      gallery: [
+        { url: '/templates/_shared/samples/g1.svg' },
+        { url: '/templates/_shared/samples/g2.svg' },
+        { url: '/templates/_shared/samples/g3.svg' },
+        { url: '/templates/_shared/samples/g4.svg' },
+      ],
+    },
+    wishes: [{ guest_name: 'Nimal', message: 'Wishing you a lifetime of love and laughter.', created_at: new Date().toISOString() }],
     mode: 'preview',
   };
 
@@ -320,24 +328,7 @@
     });
   }
 
-  // ---- RSVP (with meal preference) + confirmed counter ----
-  function updateConfirmedCounter(data) {
-    var el = document.querySelector('[data-confirmed-count]');
-    var section = document.querySelector('[data-confirmed-section]');
-    if (!el && !section) return;
-    function set(n) { if (el) el.textContent = n; if (section) section.style.display = ''; }
-    if (data.stats && typeof data.stats.confirmedGuests === 'number') set(data.stats.confirmedGuests);
-    var slug = data.invitation.slug;
-    if (data.mode === 'live' && slug) {
-      fetch('/api/invitations/public/' + encodeURIComponent(slug) + '/stats')
-        .then(function (r) { return r.json(); }).then(function (j) { if (typeof j.confirmedGuests === 'number') set(j.confirmedGuests); })
-        .catch(function () {});
-    }
-  }
-  function toggleMealField(inv) {
-    var field = document.querySelector('[data-meal-field]');
-    if (field) field.style.display = inv.mealPrefEnabled ? '' : 'none';
-  }
+  // ---- RSVP (guest name + attending) ----
   function wireRsvp(data) {
     var form = document.querySelector('[data-thewed-rsvp]');
     if (!form || form._wired) return;
@@ -353,7 +344,6 @@
         attending: (form.querySelector('[name=attending]') || {}).value !== 'no',
         guest_count: (form.querySelector('[name=guest_count]') || {}).value || 1,
         message: (form.querySelector('[name=message]') || {}).value || '',
-        meal_preference: (form.querySelector('[name=meal_preference]') || {}).value || '',
       };
       if (!fd.guest_name.trim()) { if (status) status.textContent = 'Please enter your name.'; return; }
       var btn = form.querySelector('button[type=submit]');
@@ -363,9 +353,8 @@
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (!res.ok) throw new Error(res.j.error || 'Could not submit');
-          if (status) status.textContent = fd.attending ? 'Thank you! We can’t wait to celebrate with you. 💛' : 'Thank you for letting us know. You’ll be missed!';
+          if (status) status.textContent = fd.attending ? 'Thank you! We can’t wait to celebrate with you.' : 'Thank you for letting us know. You’ll be missed!';
           form.reset();
-          updateConfirmedCounter(TheWed.data);
         }).catch(function (err) { if (status) status.textContent = err.message; })
         .finally(function () { if (btn) btn.disabled = false; });
     });
@@ -435,6 +424,27 @@
 
   var currentWishes = [];
 
+  // ---- Intro opener (envelope / curtain / bloom / doors …) ----
+  // Each template supplies a full-screen [data-opener] cover with its own CSS
+  // animation for the ".tw-opened" state; this just handles the tap-to-open,
+  // scroll lock, and cleanup. Runs once per page load.
+  function initOpener() {
+    var opener = document.querySelector('[data-opener]');
+    if (!opener || opener._wired) return;
+    opener._wired = true;
+    var root = document.documentElement;
+    var prevOverflow = root.style.overflow;
+    root.style.overflow = 'hidden';
+    function open() {
+      if (opener.classList.contains('tw-opened')) return;
+      opener.classList.add('tw-opened');
+      root.style.overflow = prevOverflow || '';
+      setTimeout(function () { opener.style.display = 'none'; }, 1800);
+      try { global.dispatchEvent(new Event('scroll')); } catch (e) {}
+    }
+    opener.addEventListener('click', open);
+  }
+
   var TheWed = {
     data: null, _cd: null,
     escapeHtml: escapeHtml, formatDate: formatDate, parseDate: parseDate,
@@ -453,11 +463,9 @@
         wireMap(data.invitation);
         wireGalleryLightbox();
         wireMusic(data.invitation);
-        toggleMealField(data.invitation);
         currentWishes = data.wishes || currentWishes;
         renderWishes(currentWishes);
         wireGuestbook(data);
-        updateConfirmedCounter(data);
         renderGreeting(data);
         wireShare(data);
         wireRsvp(data);
@@ -465,6 +473,7 @@
         applyI18n();
         if (data.invitation.slug && data.mode === 'live') loadWishes(data.invitation.slug);
       }
+      initOpener();
       global.addEventListener('message', function (e) {
         if (e && e.data && e.data.type === 'thewed:data') run(e.data.data);
       });

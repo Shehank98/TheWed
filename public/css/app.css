@@ -229,7 +229,8 @@ footer.site-footer { text-align: center; color: var(--muted); font-size: 13px; p
 .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
 .feature { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; transition: transform .15s, box-shadow .15s; }
 .feature:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-.feature .ico { width: 46px; height: 46px; border-radius: 12px; background: rgba(176,141,87,0.12); color: var(--gold-dark); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px; }
+.feature .ico { width: 40px; height: 40px; border-radius: 10px; background: rgba(176,141,87,0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.feature .ico::after { content: ''; width: 12px; height: 12px; background: var(--gold); transform: rotate(45deg); border-radius: 2px; }
 .feature h3 { font-size: 18px; margin: 0 0 6px; }
 .feature p { color: var(--muted); font-size: 14px; margin: 0; }
 

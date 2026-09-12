@@ -10,6 +10,17 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- INTRO: ornate doors opener -->
+  <div class="opener" data-opener>
+    <div class="op-door op-door-l"><span class="op-knob"></span></div>
+    <div class="op-door op-door-r"><span class="op-knob"></span></div>
+    <div class="op-center">
+      <p class="op-ayu">ආයුබෝවන්</p>
+      <p class="op-names"><span data-groom>—</span> &amp; <span data-bride>—</span></p>
+      <p class="op-tap">Tap to open</p>
+    </div>
+  </div>
+
   <div class="border-frame" aria-hidden="true"></div>
 
   <header class="hero">
@@ -74,16 +85,12 @@
 
   <section class="rsvp reveal">
     <h2 class="orn-title" data-i18n="rsvp">Kindly Respond</h2>
-    <p class="confirmed-line" data-confirmed-section style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp-form">
       <label data-i18n="name">Your name<input type="text" name="guest_name" required /></label>
       <label data-i18n="attend_q">Will you grace the occasion?
         <select name="attending"><option value="yes" data-i18n="yes">Yes, with pleasure</option><option value="no" data-i18n="no">Regretfully unable</option></select>
       </label>
       <label data-i18n="guests">Number in your party<input type="number" name="guest_count" min="0" value="1" /></label>
-      <label data-meal-field style="display:none" data-i18n="meal">Meal preference
-        <select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select>
-      </label>
       <label data-i18n="message">Your blessings<textarea name="message" rows="3"></textarea></label>
       <button type="submit" data-i18n="send">Send Response</button>
       <p class="status" data-rsvp-status></p>

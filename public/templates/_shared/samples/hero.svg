@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6ddc9"/><stop offset="45%" stop-color="#e9b7a6"/><stop offset="100%" stop-color="#b98a86"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="62%" r="30%">
+      <stop offset="0%" stop-color="#fff4e6" stop-opacity="0.95"/><stop offset="100%" stop-color="#fff4e6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="600" cy="500" r="360" fill="url(#sun)"/>
+  <path d="M0 640 Q300 600 600 640 T1200 640 V800 H0 Z" fill="#8a6d6a" opacity="0.55"/>
+  <path d="M0 690 Q300 660 600 690 T1200 690 V800 H0 Z" fill="#6f5150" opacity="0.7"/>
+  <!-- couple silhouette -->
+  <g fill="#3a2b2b" transform="translate(520,360)">
+    <circle cx="40" cy="40" r="34"/>
+    <path d="M8 92 q32 -26 64 0 l6 150 -76 0 z"/>
+    <circle cx="150" cy="30" r="30"/>
+    <path d="M120 78 q30 -22 60 0 l14 168 -70 0 q-6 -90 -4 -168z"/>
+  </g>
+  <text x="600" y="770" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#fff" opacity="0.7" letter-spacing="4">SAMPLE PHOTO</text>
+</svg>

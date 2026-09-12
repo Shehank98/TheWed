@@ -59,20 +59,8 @@ router.get('/public/:slug', async (req, res, next) => {
       message: w.message,
       created_at: w.created_at,
     }));
-    payload.stats = { confirmedGuests: await confirmedGuestCount(invitation.id) };
 
     return res.json(payload);
-  } catch (err) {
-    return next(err);
-  }
-});
-
-/** GET /api/invitations/public/:slug/stats — live confirmed-guest counter. */
-router.get('/public/:slug/stats', async (req, res, next) => {
-  try {
-    const invitation = await db('invitations').where({ slug: req.params.slug }).first();
-    if (!invitation || invitation.status !== 'published') return res.status(404).json({ error: 'not_found' });
-    return res.json({ confirmedGuests: await confirmedGuestCount(invitation.id) });
   } catch (err) {
     return next(err);
   }
@@ -95,13 +83,6 @@ router.get('/public/:slug/wishes', async (req, res, next) => {
   }
 });
 
-async function confirmedGuestCount(invitationId) {
-  const row = await db('rsvps')
-    .where({ invitation_id: invitationId, attending: true })
-    .sum({ total: 'guest_count' })
-    .first();
-  return Number((row && row.total) || 0);
-}
 
 // ===========================================================================
 // Editor (Phase 3) — all keyed by magic_link_token
@@ -367,7 +348,6 @@ router.get('/token/:token/rsvps/export', async (req, res, next) => {
       { header: 'Guest Name', key: 'guest_name', width: 28 },
       { header: 'Attending', key: 'attending', width: 12 },
       { header: 'Guest Count', key: 'guest_count', width: 14 },
-      { header: 'Meal Preference', key: 'meal_preference', width: 20 },
       { header: 'Message', key: 'message', width: 50 },
       { header: 'Submitted At', key: 'submitted_at', width: 24 },
     ];
@@ -378,7 +358,6 @@ router.get('/token/:token/rsvps/export', async (req, res, next) => {
         guest_name: r.guest_name,
         attending: r.attending ? 'Yes' : 'No',
         guest_count: r.guest_count,
-        meal_preference: r.meal_preference || '',
         message: r.message || '',
         submitted_at: new Date(r.submitted_at).toISOString(),
       });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TheWed — Beautiful digital wedding invitations</title>
+  <title>TheWed · Beautiful digital wedding invitations</title>
   <meta name="description" content="Design a stunning digital wedding invitation with live RSVP, guestbook, countdown, maps, music, QR sharing and multi-language support. Pick a template, pay by bank transfer, and share in minutes." />
   <link rel="stylesheet" href="/css/app.css" />
 </head>
@@ -26,7 +26,7 @@
     <div class="container">
       <div class="hero-copy">
         <h1 class="serif">Your love story,<br />beautifully invited.</h1>
-        <p class="lead">Create a stunning digital wedding invitation with a live RSVP, guestbook, countdown, maps, music and one-tap sharing — ready in minutes.</p>
+        <p class="lead">Create a stunning digital wedding invitation with a live RSVP, guestbook, countdown, maps, music and one-tap sharing, ready in minutes.</p>
         <div class="hero-cta">
           <a class="btn" href="#templates">Choose a template</a>
           <a class="btn ghost" href="#how">See how it works</a>
@@ -62,12 +62,12 @@
       <div class="section-head">
         <div class="kicker">Simple &amp; guided</div>
         <h2 class="serif">How it works</h2>
-        <p>From choosing a design to sharing with guests — four easy steps.</p>
+        <p>From choosing a design to sharing with guests in four easy steps.</p>
       </div>
       <div class="steps">
         <div class="step"><div class="num">1</div><h3>Choose a template</h3><p>Pick one of five designer styles that fits your celebration.</p></div>
         <div class="step"><div class="num">2</div><h3>Pay by bank transfer</h3><p>Get a reference code and our bank details. We confirm your payment.</p></div>
-        <div class="step"><div class="num">3</div><h3>Build your invitation</h3><p>A private link lets you add names, photos, schedule, story and more — with a live preview.</p></div>
+        <div class="step"><div class="num">3</div><h3>Build your invitation</h3><p>A private link lets you add names, photos, schedule, story and more, with a live preview.</p></div>
         <div class="step"><div class="num">4</div><h3>Publish &amp; share</h3><p>Get your own link and QR code, and share on WhatsApp in one tap.</p></div>
       </div>
     </div>
@@ -96,10 +96,10 @@
       </div>
       <div class="faq">
         <details open><summary>How do I pay?</summary><p>After you place an order you’ll get a reference code and our bank transfer details. Once we confirm your payment, we email you a private link to build your invitation.</p></details>
-        <details><summary>Can I edit after publishing?</summary><p>Yes. Your private link keeps working — edit anytime and re-publish. Your public link and slug stay the same.</p></details>
+        <details><summary>Can I edit after publishing?</summary><p>Yes. Your private link keeps working, so you can edit anytime and re-publish. Your public link and slug stay the same.</p></details>
         <details><summary>What happens to my invitation after the wedding?</summary><p>It stays live for 90 days after your wedding date, then automatically archives. You (or we) can adjust that date anytime.</p></details>
-        <details><summary>Can guests RSVP and leave wishes?</summary><p>Absolutely. Every invitation has a live RSVP form (with an optional meal preference), a guestbook, and a running count of confirmed guests. You can export all RSVPs to Excel.</p></details>
-        <details><summary>Do you support Sinhala and Tamil?</summary><p>Yes — guests can switch the interface between Sinhala, Tamil and English. Your own text stays exactly as you wrote it.</p></details>
+        <details><summary>Can guests RSVP and leave wishes?</summary><p>Absolutely. Every invitation has a live RSVP form where guests enter their name and whether they can come, plus a guestbook for wishes. Every reply appears in your dashboard, and you can export all RSVPs to Excel.</p></details>
+        <details><summary>Do you support Sinhala and Tamil?</summary><p>Yes, guests can switch the interface between Sinhala, Tamil and English. Your own text stays exactly as you wrote it.</p></details>
       </div>
     </div>
   </section>
@@ -139,20 +139,21 @@
 
   <script>
     const FEATURES = [
-      ['⏳', 'Live countdown', 'A ticking countdown to your big day that switches to “Today’s the day!” when it arrives.'],
-      ['🗓️', 'Event schedule', 'A beautiful timeline of your day — ceremony, reception and everything in between.'],
-      ['📍', 'Venue map', 'A “Get Directions” button and embedded map so guests find you easily.'],
-      ['🖼️', 'Photo gallery', 'Upload your favourite photos into a lazy-loaded gallery with a full-screen lightbox.'],
-      ['🎵', 'Background music', 'Set the mood with a song — plays muted with a tap-to-unmute button.'],
-      ['💌', 'Guestbook', 'Guests leave wishes and blessings on a live wall you can moderate.'],
-      ['✅', 'Smart RSVP', 'Meal preferences and a live “guests confirmed” counter, all exportable to Excel.'],
-      ['🙋', 'Personalized links', 'Send each guest a link that greets them by name — “Dear …”.'],
-      ['🔗', 'Share &amp; QR', 'One-tap WhatsApp sharing and a downloadable QR code for your invitation.'],
-      ['🌐', 'Multi-language', 'A Sinhala / Tamil / English switcher for guests, with your text untouched.'],
+      ['Live countdown', 'A ticking countdown to your big day that switches to a “Today’s the day!” message when it arrives.'],
+      ['Intro animation', 'Each design opens with its own reveal, like an envelope or doors, before the invitation appears.'],
+      ['Event schedule', 'A beautiful timeline of your day covering the ceremony, reception and everything in between.'],
+      ['Venue map', 'A “Get Directions” button and embedded map so guests find you easily.'],
+      ['Photo gallery', 'Upload your favourite photos into a lazy-loaded gallery with a full-screen lightbox.'],
+      ['Background music', 'Set the mood with a song that plays muted, with a tap-to-unmute button.'],
+      ['Guestbook', 'Guests leave wishes and blessings on a live wall that you can moderate.'],
+      ['RSVP tracking', 'Guests enter their name and whether they can come; every reply shows in your dashboard and exports to Excel.'],
+      ['Personalized links', 'Send each guest a link that greets them by name, such as “Dear Nimal”.'],
+      ['Share and QR', 'One-tap WhatsApp sharing and a downloadable QR code for your invitation.'],
+      ['Multi-language', 'A Sinhala, Tamil and English switcher for guests, with your own text untouched.'],
     ];
     const fg = document.getElementById('feature-grid');
     fg.innerHTML = FEATURES.map((f) => `
-      <div class="feature"><div class="ico">${f[0]}</div><h3>${f[1]}</h3><p>${f[2]}</p></div>`).join('');
+      <div class="feature"><span class="ico" aria-hidden="true"></span><h3>${f[0]}</h3><p>${f[1]}</p></div>`).join('');
 
     const grid = document.getElementById('template-grid');
     const modal = document.getElementById('order-modal');

@@ -13,7 +13,7 @@ router.post('/:slug', async (req, res, next) => {
       return res.status(404).json({ error: 'This invitation is not accepting RSVPs' });
     }
 
-    const { guest_name, attending, guest_count, message, meal_preference } = req.body || {};
+    const { guest_name, attending, guest_count, message } = req.body || {};
 
     if (!guest_name || !String(guest_name).trim()) {
       return res.status(400).json({ error: 'guest_name is required' });
@@ -33,7 +33,6 @@ router.post('/:slug', async (req, res, next) => {
         attending: isAttending,
         guest_count: count,
         message: message ? String(message).trim().slice(0, 2000) : null,
-        meal_preference: meal_preference ? String(meal_preference).trim().slice(0, 100) : null,
       })
       .returning('*');
 

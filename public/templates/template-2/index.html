@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- INTRO: split curtain opener -->
+  <div class="opener" data-opener>
+    <div class="op-panel op-left"></div>
+    <div class="op-panel op-right"></div>
+    <div class="op-center">
+      <p class="op-names"><span data-groom>—</span> &amp; <span data-bride>—</span></p>
+      <p class="op-tap">Tap to open</p>
+    </div>
+  </div>
+
   <nav class="mini-nav">
     <span class="mono" data-initials>—</span>
     <span class="mono" data-date-short>—</span>
@@ -66,7 +76,6 @@
 
   <section class="block reveal-up">
     <p class="block-label" data-i18n="rsvp">04 — RSVP</p>
-    <p class="confirmed-line" data-confirmed-section style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp">
       <div class="pair">
         <label data-i18n="name">Name<input type="text" name="guest_name" required /></label>
@@ -74,9 +83,6 @@
       </div>
       <label data-i18n="attend_q">Attending?
         <select name="attending"><option value="yes" data-i18n="yes">Yes, I'll be there</option><option value="no" data-i18n="no">Sorry, can't make it</option></select>
-      </label>
-      <label data-meal-field style="display:none" data-i18n="meal">Meal preference
-        <select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select>
       </label>
       <label data-i18n="message">Message<textarea name="message" rows="2"></textarea></label>
       <button type="submit" data-i18n="send">Submit →</button>

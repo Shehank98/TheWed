@@ -182,8 +182,10 @@ All 5 templates and the editor now include:
 | 4 | Photo gallery | Shared lightbox (prev/next, keyboard, lazy-loaded). |
 | 5 | Background music | Optional MP3; muted autoplay + floating mute/unmute button. |
 | 6 | Guestbook | Public wishes wall + dashboard moderation (approve/hide/delete). |
-| 7 | RSVP+ | Optional meal preference (per-invitation toggle) + live “X guests confirmed” counter. |
+| 7 | RSVP tracking | Guests enter their name and whether they can come; every reply shows in the couple dashboard and exports to Excel. |
 | 8 | Personalized links | `?to=Name` → “Dear Name”; guest list mgmt + Excel export. |
+| 12 | Intro animation | Each template opens with its own reveal (envelope, split curtain, floral bloom, cinematic letterbox, ornate doors) — tap to open. |
+| 13 | Sample images | Storefront previews render with built-in sample photos so couples see a filled-in design. |
 | 9 | Share + QR | WhatsApp share button; server-side QR (qrcode) of the invite URL. |
 | 10 | Multi-language | Sinhala / Tamil / English label switcher; couple’s own text unchanged. |
 

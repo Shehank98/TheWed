@@ -10,6 +10,17 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- INTRO: cinematic letterbox opener -->
+  <div class="opener" data-opener>
+    <div class="op-bar op-top"></div>
+    <div class="op-bar op-bottom"></div>
+    <div class="op-center">
+      <p class="op-kicker">The wedding film of</p>
+      <p class="op-names"><span data-groom>—</span> &amp; <span data-bride>—</span></p>
+      <p class="op-tap">▶ Tap to begin</p>
+    </div>
+  </div>
+
   <header class="hero">
     <div class="hero-bg" data-parallax data-hero-bg></div>
     <div class="hero-scrim"></div>
@@ -73,12 +84,10 @@
 
   <section class="rsvp-section">
     <h2 data-reveal data-i18n="rsvp">Reserve your seat</h2>
-    <p class="confirmed-line" data-confirmed-section data-reveal style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp" data-reveal>
       <label data-i18n="name">Full name<input type="text" name="guest_name" required /></label>
       <label data-i18n="attend_q">Attending<select name="attending"><option value="yes" data-i18n="yes">Yes — count me in</option><option value="no" data-i18n="no">No — with regret</option></select></label>
       <label data-i18n="guests">Guests<input type="number" name="guest_count" min="0" value="1" /></label>
-      <label data-meal-field style="display:none" data-i18n="meal">Meal preference<select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select></label>
       <label data-i18n="message">Message<textarea name="message" rows="3"></textarea></label>
       <button type="submit" data-i18n="send">Confirm attendance</button>
       <p class="status" data-rsvp-status></p>

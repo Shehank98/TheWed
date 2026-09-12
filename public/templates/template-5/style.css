@@ -102,3 +102,25 @@ section { padding: 90px 30px; max-width: 880px; margin: 0 auto; position: relati
 .tw-wish-msg { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--ink); }
 .tw-wish-name { text-align: right; color: var(--maroon); margin-top: 8px; font-family: 'Cinzel', serif; font-size: 14px; }
 .tw-no-wishes { text-align: center; color: #9a8288; }
+
+/* --- Intro opener: ornate doors --- */
+.opener { position: fixed; inset: 0; z-index: 9999; cursor: pointer; perspective: 1600px;
+  background: var(--cream); transition: opacity .6s ease 1.2s, visibility .6s ease 1.2s; }
+.opener.tw-opened { opacity: 0; visibility: hidden; }
+.op-door { position: absolute; top: 0; bottom: 0; width: 50%; background:
+  repeating-linear-gradient(45deg, rgba(200,162,74,0.10) 0 14px, transparent 14px 28px),
+  linear-gradient(#7a1622, var(--maroon));
+  border: 3px solid var(--gold); transition: transform 1.15s cubic-bezier(.6,0,.2,1); z-index: 1; }
+.op-door-l { left: 0; transform-origin: left center; box-shadow: inset -18px 0 40px rgba(0,0,0,.4); }
+.op-door-r { right: 0; transform-origin: right center; box-shadow: inset 18px 0 40px rgba(0,0,0,.4); }
+.opener.tw-opened .op-door-l { transform: rotateY(-105deg); }
+.opener.tw-opened .op-door-r { transform: rotateY(105deg); }
+.op-knob { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--gold-lt); box-shadow: 0 0 0 4px rgba(200,162,74,.3); }
+.op-door-l .op-knob { right: 16px; margin-top: -8px; }
+.op-door-r .op-knob { left: 16px; margin-top: -8px; }
+.op-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 2; transition: opacity .45s; }
+.opener.tw-opened .op-center { opacity: 0; }
+.op-ayu { font-family: 'Cinzel', serif; letter-spacing: 2px; color: var(--gold-lt); font-size: 18px; }
+.op-names { font-family: 'Cinzel', serif; font-size: clamp(28px,6vw,56px); color: var(--gold-lt); margin: 12px 0; }
+.op-tap { font-family: 'Cinzel', serif; letter-spacing: 3px; text-transform: uppercase; font-size: 12px; color: var(--gold); animation: tapPulse 1.7s ease-in-out infinite; }
+@keyframes tapPulse { 0%,100%{ opacity:.5 } 50%{ opacity:1 } }

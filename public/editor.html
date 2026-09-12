@@ -99,11 +99,6 @@
             </select>
             <div class="hint">Guests can switch language on the invitation; your own text stays as written.</div>
           </div>
-          <div class="field">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-              <input type="checkbox" id="meal_pref_enabled" style="width:auto;" /> Ask guests for a meal preference in RSVP
-            </label>
-          </div>
         </fieldset>
 
         <fieldset id="custom-fields-set">
@@ -245,7 +240,6 @@
       document.getElementById('map_link').value = inv.mapLink || '';
       document.getElementById('music_url').value = inv.musicUrl || '';
       document.getElementById('language_default').value = inv.languageDefault || 'en';
-      document.getElementById('meal_pref_enabled').checked = Boolean(inv.mealPrefEnabled);
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
       renderScheduleRows(inv.schedule || []);
@@ -313,8 +307,6 @@
       state.invitation.musicUrl = body.music_url;
       body.language_default = document.getElementById('language_default').value;
       state.invitation.languageDefault = body.language_default;
-      body.meal_pref_enabled = document.getElementById('meal_pref_enabled').checked;
-      state.invitation.mealPrefEnabled = body.meal_pref_enabled;
       return body;
     }
 

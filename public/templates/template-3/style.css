@@ -88,3 +88,31 @@ section { position: relative; z-index: 2; padding: 90px 24px; max-width: 900px; 
 .tw-wish-msg { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--ink); }
 .tw-wish-name { text-align: right; color: var(--rose-dark); margin-top: 8px; }
 .tw-no-wishes { text-align: center; color: #9a8288; }
+
+/* --- Intro opener: floral bloom --- */
+.opener { position: fixed; inset: 0; z-index: 9999; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+  background: radial-gradient(circle at 50% 40%, #fff, var(--blush)); transition: opacity .8s ease 1s, visibility .8s ease 1s; }
+.opener.tw-opened { opacity: 0; visibility: hidden; }
+.op-bloom { position: relative; width: 200px; height: 200px; }
+.op-pistil { display: none; }
+.op-petal { position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px;
+  background: radial-gradient(circle at 30% 30%, #f6c9d2, var(--rose)); border-radius: 60% 60% 60% 0;
+  transform-origin: bottom right; transition: transform 1s cubic-bezier(.2,.8,.2,1), opacity .8s ease; opacity: .95; }
+.op-petal.p1 { transform: rotate(0deg) translateY(0) scale(.5); }
+.op-petal.p2 { transform: rotate(60deg) translateY(0) scale(.5); }
+.op-petal.p3 { transform: rotate(120deg) translateY(0) scale(.5); }
+.op-petal.p4 { transform: rotate(180deg) translateY(0) scale(.5); }
+.op-petal.p5 { transform: rotate(240deg) translateY(0) scale(.5); }
+.op-petal.p6 { transform: rotate(300deg) translateY(0) scale(.5); }
+.opener.tw-opened .op-petal { opacity: 0; }
+.opener.tw-opened .op-petal.p1 { transform: rotate(0deg) translate(60px,-60px) scale(1.4); }
+.opener.tw-opened .op-petal.p2 { transform: rotate(60deg) translate(60px,-60px) scale(1.4); }
+.opener.tw-opened .op-petal.p3 { transform: rotate(120deg) translate(60px,-60px) scale(1.4); }
+.opener.tw-opened .op-petal.p4 { transform: rotate(180deg) translate(60px,-60px) scale(1.4); }
+.opener.tw-opened .op-petal.p5 { transform: rotate(240deg) translate(60px,-60px) scale(1.4); }
+.opener.tw-opened .op-petal.p6 { transform: rotate(300deg) translate(60px,-60px) scale(1.4); }
+.op-core { text-align: center; z-index: 2; transition: opacity .5s; }
+.opener.tw-opened .op-core { opacity: 0; }
+.op-names { font-family: 'Pinyon Script', cursive; font-size: clamp(30px,6vw,46px); color: var(--rose-dark); }
+.op-tap { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--sage); margin-top: 6px; animation: tapPulse 1.6s ease-in-out infinite; }
+@keyframes tapPulse { 0%,100%{ opacity:.4 } 50%{ opacity:.95 } }
