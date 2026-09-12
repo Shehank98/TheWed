@@ -45,7 +45,9 @@
     <div class="editor-form">
       <div class="tabs">
         <div class="tab active" data-tab="build">Build</div>
+        <div class="tab" data-tab="guests">Guests</div>
         <div class="tab" data-tab="rsvps">RSVPs</div>
+        <div class="tab" data-tab="wishes">Wishes</div>
       </div>
 
       <!-- BUILD TAB -->
@@ -67,6 +69,41 @@
         <fieldset>
           <legend>Your story</legend>
           <div class="field"><label>How you met / your story</label><textarea id="story_text" style="min-height:120px;"></textarea></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Event schedule</legend>
+          <p class="hint" style="margin:0 0 10px;">Add each part of the day (e.g. Ceremony, Reception). Shown as a timeline.</p>
+          <div id="schedule-rows"></div>
+          <button type="button" class="btn ghost small" id="add-schedule-row">+ Add event</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Map, music &amp; language</legend>
+          <div class="field">
+            <label>Venue map link or embed code</label>
+            <input type="text" id="map_link" placeholder="https://maps.google.com/... or full <iframe> embed" />
+            <div class="hint">Paste a Google Maps link (adds a “Get Directions” button) or an embed code (shows a map).</div>
+          </div>
+          <div class="field">
+            <label>Background music (MP3 URL)</label>
+            <input type="text" id="music_url" placeholder="https://.../song.mp3" />
+            <div class="hint">Optional. Plays muted with a floating mute/unmute button.</div>
+          </div>
+          <div class="field">
+            <label>Default language</label>
+            <select id="language_default">
+              <option value="en">English</option>
+              <option value="si">Sinhala (සිංහල)</option>
+              <option value="ta">Tamil (தமிழ்)</option>
+            </select>
+            <div class="hint">Guests can switch language on the invitation; your own text stays as written.</div>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="meal_pref_enabled" style="width:auto;" /> Ask guests for a meal preference in RSVP
+            </label>
+          </div>
         </fieldset>
 
         <fieldset id="custom-fields-set">
@@ -101,7 +138,31 @@
           <div id="publish-status"></div>
           <button class="btn block" id="publish-btn" style="margin-top:10px;">Publish invitation</button>
           <p class="hint" style="text-align:center;margin-top:8px;">Publishing generates your public link. You can keep editing afterwards.</p>
+          <div id="share-box" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+            <div style="display:flex;gap:14px;align-items:center;">
+              <img id="qr-img" alt="QR code" style="width:96px;height:96px;border:1px solid var(--line);border-radius:8px;" />
+              <div style="flex:1;">
+                <a class="btn small block" id="qr-download" href="#" style="margin-bottom:6px;">Download QR code</a>
+                <a class="btn ghost small block" id="share-whatsapp" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- GUESTS TAB -->
+      <div id="tab-guests" style="display:none;">
+        <p class="hint">Add named guests to generate personalized links (each opens with “Dear &lt;name&gt;”). Export them to send out.</p>
+        <div class="field">
+          <label>Add guests (one name per line)</label>
+          <textarea id="guest-names" rows="3" placeholder="Nimal Perera&#10;Sunil &amp; Kamala"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn small" id="add-guests">Add guests</button>
+          <a class="btn ghost small" id="guests-export" href="#">Export to Excel</a>
+        </div>
+        <div id="guests-msg"></div>
+        <div id="guests-list"></div>
       </div>
 
       <!-- RSVP TAB -->
@@ -112,6 +173,13 @@
           <a class="btn ghost small" id="rsvp-export" href="#">Export to Excel</a>
         </div>
         <div id="rsvp-list"></div>
+      </div>
+
+      <!-- WISHES MODERATION TAB -->
+      <div id="tab-wishes" style="display:none;">
+        <p class="hint">Guestbook wishes are shown on your invitation by default. Hide any you don’t want public.</p>
+        <button class="btn small" id="wishes-refresh" style="margin-bottom:12px;">Refresh</button>
+        <div id="wishes-mod-list"></div>
       </div>
     </div>
 
@@ -135,7 +203,8 @@
       if (ready && state) preview.contentWindow.postMessage({ type: 'thewed:data', data: previewPayload() }, '*');
     }
     function previewPayload() {
-      return { template: state.template, invitation: state.invitation, images: state.images, mode: 'preview' };
+      return { template: state.template, invitation: state.invitation, images: state.images,
+        publicUrl: state.publicUrl || '', mode: 'preview' };
     }
     window.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'thewed:ready') { ready = true; postPreview(); }
@@ -173,9 +242,47 @@
       document.getElementById('venue_name').value = inv.venueName || '';
       document.getElementById('venue_address').value = inv.venueAddress || '';
       document.getElementById('story_text').value = inv.storyText || '';
+      document.getElementById('map_link').value = inv.mapLink || '';
+      document.getElementById('music_url').value = inv.musicUrl || '';
+      document.getElementById('language_default').value = inv.languageDefault || 'en';
+      document.getElementById('meal_pref_enabled').checked = Boolean(inv.mealPrefEnabled);
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
+      renderScheduleRows(inv.schedule || []);
     }
+
+    // ---- schedule repeater ----
+    function renderScheduleRows(items) {
+      const wrap = document.getElementById('schedule-rows');
+      wrap.innerHTML = '';
+      (items || []).forEach((it) => addScheduleRow(it));
+    }
+    function addScheduleRow(it) {
+      it = it || { name: '', time: '', venue: '' };
+      const wrap = document.getElementById('schedule-rows');
+      const row = document.createElement('div');
+      row.className = 'sched-row';
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:8px;align-items:center;';
+      row.innerHTML =
+        '<input type="text" class="s-name" placeholder="Event (e.g. Ceremony)" style="grid-column:1 / span 2;" />' +
+        '<input type="text" class="s-time" placeholder="Time" />' +
+        '<input type="text" class="s-venue" placeholder="Venue" />' +
+        '<button type="button" class="btn danger small s-del">✕</button>';
+      row.querySelector('.s-name').value = it.name || '';
+      row.querySelector('.s-time').value = it.time || '';
+      row.querySelector('.s-venue').value = it.venue || '';
+      row.querySelectorAll('input').forEach((inp) => inp.addEventListener('input', onInput));
+      row.querySelector('.s-del').addEventListener('click', () => { row.remove(); onInput(); });
+      wrap.appendChild(row);
+    }
+    function collectSchedule() {
+      return Array.prototype.map.call(document.querySelectorAll('#schedule-rows .sched-row'), (row) => ({
+        name: row.querySelector('.s-name').value.trim(),
+        time: row.querySelector('.s-time').value.trim(),
+        venue: row.querySelector('.s-venue').value.trim(),
+      })).filter((it) => it.name || it.time || it.venue);
+    }
+    document.getElementById('add-schedule-row').addEventListener('click', () => { addScheduleRow(); });
 
     // camelCase <-> snake mapping for the invitation object used by preview
     const CAMEL = {
@@ -195,6 +302,19 @@
       document.querySelectorAll('[data-cf]').forEach((el) => { if (el.value) cf[el.dataset.cf] = el.value; });
       body.custom_fields = cf;
       state.invitation.customFields = cf;
+
+      // Extended fields
+      const schedule = collectSchedule();
+      body.schedule = schedule;
+      state.invitation.schedule = schedule;
+      body.map_link = document.getElementById('map_link').value;
+      state.invitation.mapLink = body.map_link;
+      body.music_url = document.getElementById('music_url').value;
+      state.invitation.musicUrl = body.music_url;
+      body.language_default = document.getElementById('language_default').value;
+      state.invitation.languageDefault = body.language_default;
+      body.meal_pref_enabled = document.getElementById('meal_pref_enabled').checked;
+      state.invitation.mealPrefEnabled = body.meal_pref_enabled;
       return body;
     }
 
@@ -221,9 +341,10 @@
       }
     }
 
-    document.querySelectorAll('#tab-build input, #tab-build textarea').forEach((el) => {
+    document.querySelectorAll('#tab-build input, #tab-build textarea, #tab-build select').forEach((el) => {
       if (el.type === 'file') return;
       el.addEventListener('input', onInput);
+      if (el.type === 'checkbox' || el.tagName === 'SELECT') el.addEventListener('change', onInput);
     });
 
     // ---- images ----
@@ -279,11 +400,20 @@
     // ---- publish ----
     function renderPublish() {
       const box = document.getElementById('publish-status');
+      const shareBox = document.getElementById('share-box');
       if (state.invitation.status === 'published' && state.publicUrl) {
         box.innerHTML = `<div class="notice ok">Published! Public link:<br><a href="${state.publicUrl}" target="_blank" rel="noopener">${state.publicUrl}</a></div>`;
         document.getElementById('publish-btn').textContent = 'Re-publish changes';
+        // QR + share
+        const qrBase = '/api/invitations/token/' + encodeURIComponent(token) + '/qr';
+        document.getElementById('qr-img').src = qrBase + '?t=' + Date.now();
+        document.getElementById('qr-download').href = qrBase + '?download=1';
+        const msg = `${state.invitation.groomName} & ${state.invitation.brideName} are getting married! You're invited 💛 ${state.publicUrl}`;
+        document.getElementById('share-whatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+        shareBox.classList.remove('hidden');
       } else {
         box.innerHTML = `<span class="badge draft">Draft</span> <span class="hint">Not published yet.</span>`;
+        shareBox.classList.add('hidden');
       }
     }
 
@@ -307,17 +437,93 @@
       } finally { btn.disabled = false; }
     });
 
-    // ---- tabs & rsvps ----
+    // ---- tabs ----
     document.querySelectorAll('.tab').forEach((tab) => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
         tab.classList.add('active');
-        const build = tab.dataset.tab === 'build';
-        document.getElementById('tab-build').style.display = build ? '' : 'none';
-        document.getElementById('tab-rsvps').style.display = build ? 'none' : '';
-        if (!build) loadRsvps();
+        const which = tab.dataset.tab;
+        document.getElementById('tab-build').style.display = which === 'build' ? '' : 'none';
+        document.getElementById('tab-guests').style.display = which === 'guests' ? '' : 'none';
+        document.getElementById('tab-rsvps').style.display = which === 'rsvps' ? '' : 'none';
+        document.getElementById('tab-wishes').style.display = which === 'wishes' ? '' : 'none';
+        if (which === 'rsvps') loadRsvps();
+        if (which === 'guests') loadGuests();
+        if (which === 'wishes') loadWishesMod();
       });
     });
+
+    // ---- guest list ----
+    async function loadGuests() {
+      const list = document.getElementById('guests-list');
+      document.getElementById('guests-export').href = '/api/invitations/token/' + encodeURIComponent(token) + '/guests/export';
+      list.innerHTML = '<p class="hint">Loading…</p>';
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/guests');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        if (!data.published) document.getElementById('guests-msg').innerHTML = '<div class="notice warn">Publish your invitation to activate the personalized links.</div>';
+        else document.getElementById('guests-msg').innerHTML = '';
+        if (!data.guests.length) { list.innerHTML = '<p class="hint">No guests added yet.</p>'; return; }
+        list.innerHTML = '<table><thead><tr><th>Name</th><th>Link</th><th></th></tr></thead><tbody>' +
+          data.guests.map((g) => `<tr>
+            <td>${esc(g.guest_name)}</td>
+            <td>${g.link ? `<a href="${g.link}" target="_blank" rel="noopener" style="font-size:12px;word-break:break-all;">open</a> <button class="btn ghost small" data-copy="${encodeURIComponent(g.link)}">copy</button>` : '<span class="hint">publish first</span>'}</td>
+            <td><button class="btn danger small" data-gdel="${g.id}">✕</button></td>
+          </tr>`).join('') + '</tbody></table>';
+        list.querySelectorAll('[data-gdel]').forEach((b) => b.addEventListener('click', () => deleteGuest(b.dataset.gdel)));
+        list.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+          navigator.clipboard && navigator.clipboard.writeText(decodeURIComponent(b.dataset.copy));
+          b.textContent = 'copied';
+        }));
+      } catch (e) { list.innerHTML = '<div class="notice err">' + e.message + '</div>'; }
+    }
+    document.getElementById('add-guests').addEventListener('click', async () => {
+      const ta = document.getElementById('guest-names');
+      const names = ta.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      if (!names.length) return;
+      const res = await api('/token/' + encodeURIComponent(token) + '/guests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ names }),
+      });
+      if (res.ok) { ta.value = ''; loadGuests(); }
+    });
+    async function deleteGuest(id) {
+      await api('/token/' + encodeURIComponent(token) + '/guests/' + id, { method: 'DELETE' });
+      loadGuests();
+    }
+
+    // ---- wishes moderation ----
+    async function loadWishesMod() {
+      const list = document.getElementById('wishes-mod-list');
+      list.innerHTML = '<p class="hint">Loading…</p>';
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/wishes');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        if (!data.wishes.length) { list.innerHTML = '<p class="hint">No wishes yet.</p>'; return; }
+        list.innerHTML = data.wishes.map((w) => `
+          <div class="panel" style="padding:14px;margin-bottom:10px;${w.approved ? '' : 'opacity:0.55;'}">
+            <div style="font-style:italic;">“${esc(w.message)}”</div>
+            <div class="hint" style="margin-top:6px;">— ${esc(w.guest_name)}</div>
+            <div style="margin-top:10px;display:flex;gap:6px;">
+              <button class="btn ghost small" data-wtoggle="${w.id}" data-approved="${w.approved ? '1' : '0'}">${w.approved ? 'Hide' : 'Show'}</button>
+              <button class="btn danger small" data-wdel="${w.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        list.querySelectorAll('[data-wtoggle]').forEach((b) => b.addEventListener('click', async () => {
+          const approved = b.dataset.approved !== '1';
+          await api('/token/' + encodeURIComponent(token) + '/wishes/' + b.dataset.wtoggle, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved }),
+          });
+          loadWishesMod();
+        }));
+        list.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', async () => {
+          await api('/token/' + encodeURIComponent(token) + '/wishes/' + b.dataset.wdel, { method: 'DELETE' });
+          loadWishesMod();
+        }));
+      } catch (e) { list.innerHTML = '<div class="notice err">' + e.message + '</div>'; }
+    }
+    document.getElementById('wishes-refresh').addEventListener('click', loadWishesMod);
 
     async function loadRsvps() {
       const summary = document.getElementById('rsvp-summary');

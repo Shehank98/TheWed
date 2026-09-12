@@ -62,3 +62,34 @@ section { padding: 12vh 6vw; max-width: 1000px; margin: 0 auto; }
   .cd-line { gap: 34px; }
   .cd-line b { font-size: 40px; }
 }
+
+/* --- Feature blocks (minimalist) --- */
+.guest-greeting { font-family: 'Fraunces', serif; font-style: italic; font-size: 20px; color: var(--sub); margin-bottom: 14px; }
+.today-msg { text-align: center; font-family: 'Fraunces', serif; font-size: 40px; color: var(--ink); }
+
+.tw-timeline { display: grid; gap: 0; max-width: 640px; }
+.tw-tl-item { display: grid; grid-template-columns: 130px 1fr; gap: 20px; padding: 22px 0; border-bottom: 1px solid var(--line); position: relative; }
+.tw-tl-dot { display: none; }
+.tw-tl-time { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--sub); padding-top: 6px; }
+.tw-tl-name { font-family: 'Fraunces', serif; font-size: 24px; }
+.tw-tl-venue { color: var(--sub); font-size: 15px; }
+
+.map-block { margin-top: 26px; }
+.map-embed:not(:empty) { height: 260px; margin-bottom: 16px; }
+.directions-btn { display: inline-block; background: var(--ink); color: #fff; text-decoration: none; padding: 14px 28px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+.directions-btn:hover { opacity: .85; }
+
+.confirmed-line { color: var(--sub); margin-bottom: 24px; font-family: 'Fraunces', serif; font-size: 20px; }
+.confirmed-line b { font-size: 30px; color: var(--ink); }
+
+.share-btn { display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 13px 26px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+
+.wish-form { display: flex; flex-direction: column; gap: 14px; max-width: 520px; margin-bottom: 30px; }
+.wish-form input, .wish-form textarea { border: none; border-bottom: 1px solid var(--ink); padding: 10px 0; font-family: 'Inter', sans-serif; font-size: 16px; background: transparent; }
+.wish-form input:focus, .wish-form textarea:focus { outline: none; }
+.wish-form button { align-self: flex-start; background: var(--ink); color: #fff; border: none; padding: 14px 30px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+.wishes-list { display: grid; gap: 2px; max-width: 720px; }
+.tw-wish { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.tw-wish-msg { font-family: 'Fraunces', serif; font-size: 22px; line-height: 1.5; }
+.tw-wish-name { color: var(--sub); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+.tw-no-wishes { color: var(--sub); }

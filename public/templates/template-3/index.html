@@ -16,6 +16,7 @@
     <svg class="corner tl" viewBox="0 0 120 120"><use href="#floral"/></svg>
     <svg class="corner br" viewBox="0 0 120 120"><use href="#floral"/></svg>
     <div class="hero-inner bloom">
+      <p class="guest-greeting" data-guest-greeting-section style="display:none"><span data-guest-greeting></span></p>
       <p class="eyebrow">We're getting married</p>
       <h1 class="script" data-groom>—</h1>
       <div class="amp">&amp;</div>
@@ -25,12 +26,19 @@
   </header>
 
   <section class="cd bloom">
+    <div class="today-msg" data-today style="display:none"></div>
     <div class="cd-grid" data-countdown>
-      <div><b data-cd-days>0</b><span>Days</span></div>
-      <div><b data-cd-hours>0</b><span>Hours</span></div>
-      <div><b data-cd-mins>0</b><span>Mins</span></div>
-      <div><b data-cd-secs>0</b><span>Secs</span></div>
+      <div><b data-cd-days>0</b><span data-i18n="days">Days</span></div>
+      <div><b data-cd-hours>0</b><span data-i18n="hours">Hours</span></div>
+      <div><b data-cd-mins>0</b><span data-i18n="minutes">Mins</span></div>
+      <div><b data-cd-secs>0</b><span data-i18n="seconds">Secs</span></div>
     </div>
+  </section>
+
+  <section class="schedule bloom" data-schedule-section style="display:none">
+    <h2 class="script-title" data-i18n="schedule">Schedule</h2>
+    <div class="petal-divider">❀</div>
+    <div class="tw-timeline" data-schedule></div>
   </section>
 
   <section class="story bloom" data-story-section>
@@ -48,6 +56,10 @@
       <p class="d-time" data-time></p>
       <p class="d-venue" data-venue-name></p>
       <p class="d-addr" data-venue-address></p>
+      <div class="map-block" data-map-section style="display:none">
+        <div class="map-embed" data-map-embed></div>
+        <a class="directions-btn" data-directions href="#" data-i18n="directions">Get Directions</a>
+      </div>
     </div>
   </section>
 
@@ -58,19 +70,36 @@
   </section>
 
   <section class="rsvp bloom">
-    <h2 class="script-title">Kindly RSVP</h2>
+    <h2 class="script-title" data-i18n="rsvp">Kindly RSVP</h2>
     <div class="petal-divider">❀</div>
+    <p class="confirmed-line" data-confirmed-section style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp-form">
-      <label>Your name<input type="text" name="guest_name" required /></label>
-      <label>Will you celebrate with us?
-        <select name="attending"><option value="yes">With joy, yes!</option><option value="no">Sadly, no</option></select>
+      <label data-i18n="name">Your name<input type="text" name="guest_name" required /></label>
+      <label data-i18n="attend_q">Will you celebrate with us?
+        <select name="attending"><option value="yes" data-i18n="yes">With joy, yes!</option><option value="no" data-i18n="no">Sadly, no</option></select>
       </label>
-      <label>Guests in your party<input type="number" name="guest_count" min="0" value="1" /></label>
-      <label>Your blessing / message<textarea name="message" rows="3"></textarea></label>
-      <button type="submit">Send with love</button>
+      <label data-i18n="guests">Guests in your party<input type="number" name="guest_count" min="0" value="1" /></label>
+      <label data-meal-field style="display:none" data-i18n="meal">Meal preference
+        <select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select>
+      </label>
+      <label data-i18n="message">Your blessing / message<textarea name="message" rows="3"></textarea></label>
+      <button type="submit" data-i18n="send">Send with love</button>
       <p class="status" data-rsvp-status></p>
     </form>
     <p class="rsvp-phone" data-rsvp-phone></p>
+    <p style="text-align:center;margin-top:18px"><a class="share-btn" data-share-whatsapp href="#" data-i18n="share">Share on WhatsApp</a></p>
+  </section>
+
+  <section class="guestbook bloom" data-guestbook-section>
+    <h2 class="script-title" data-i18n="wishes">Wishes &amp; Blessings</h2>
+    <div class="petal-divider">❀</div>
+    <form data-wish-form class="wish-form">
+      <input type="text" name="guest_name" data-i18n-ph="wish_name" placeholder="Your name" required />
+      <textarea name="message" rows="2" data-i18n-ph="wish_msg" placeholder="Your wish for the couple" required></textarea>
+      <button type="submit" data-i18n="wish_send">Post wish</button>
+      <p class="status" data-wish-status></p>
+    </form>
+    <div class="wishes-list" data-wishes></div>
   </section>
 
   <footer class="foot">

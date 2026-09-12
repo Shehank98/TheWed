@@ -43,6 +43,11 @@
         if (!res.ok) throw new Error('Failed to load');
         const data = await res.json();
         data.mode = 'live';
+        // Per-guest personalization (?to=Name) + canonical share URL live on the
+        // parent page; the template runs in the iframe, so pass them in.
+        const params = new URLSearchParams(location.search);
+        data.guestName = params.get('to') || '';
+        data.publicUrl = location.origin + '/i/' + encodeURIComponent(slug);
         payload = data;
         document.title = `${data.invitation.groomName} & ${data.invitation.brideName} — Wedding Invitation`;
         frame.src = '/templates/' + data.template.folderKey + '/index.html';

@@ -27,6 +27,29 @@ async function loadImages(invitationId) {
 }
 
 /**
+ * Coerce the stored schedule (JSONB, may arrive as a string) into a clean
+ * array of { name, time, venue } items.
+ */
+function normalizeSchedule(schedule) {
+  let arr = schedule;
+  if (typeof arr === 'string') {
+    try {
+      arr = JSON.parse(arr);
+    } catch {
+      arr = [];
+    }
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((it) => ({
+      name: String((it && it.name) || '').slice(0, 200),
+      time: String((it && it.time) || '').slice(0, 100),
+      venue: String((it && it.venue) || '').slice(0, 300),
+    }))
+    .filter((it) => it.name || it.time || it.venue);
+}
+
+/**
  * The render payload shared by templates. `includeStatus` adds status/slug for
  * the public endpoint.
  */
@@ -49,6 +72,11 @@ function renderPayload(invitation, template, images) {
       venueAddress: invitation.venue_address || '',
       storyText: invitation.story_text || '',
       customFields: invitation.custom_fields || {},
+      schedule: normalizeSchedule(invitation.schedule),
+      mapLink: invitation.map_link || '',
+      musicUrl: invitation.music_url || '',
+      languageDefault: invitation.language_default || 'en',
+      mealPrefEnabled: Boolean(invitation.meal_pref_enabled),
       slug: invitation.slug || '',
       status: invitation.status,
     },
@@ -56,4 +84,4 @@ function renderPayload(invitation, template, images) {
   };
 }
 
-module.exports = { renderPayload, groupImages, loadImages };
+module.exports = { renderPayload, groupImages, loadImages, normalizeSchedule };

@@ -12,6 +12,7 @@ const ordersRouter = require('./routes/orders');
 const adminRouter = require('./routes/admin');
 const invitationsRouter = require('./routes/invitations');
 const rsvpRouter = require('./routes/rsvp');
+const wishesRouter = require('./routes/wishes');
 const templatesRouter = require('./routes/templates');
 
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/invitations', invitationsRouter);
 app.use('/api/rsvp', rsvpRouter);
+app.use('/api/wishes', wishesRouter);
 
 // --- HTML pages (dynamic routes render static shells; JS reads the URL) -----
 // Registered before static so they serve directly (no directory redirects).

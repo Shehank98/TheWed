@@ -14,6 +14,7 @@
     <div class="hero-bg" data-parallax data-hero-bg></div>
     <div class="hero-scrim"></div>
     <div class="hero-content">
+      <p class="guest-greeting" data-guest-greeting-section style="display:none"><span data-guest-greeting></span></p>
       <p class="kicker" data-reveal>— The wedding of —</p>
       <h1 class="title">
         <span data-reveal data-groom>—</span>
@@ -27,15 +28,21 @@
   </header>
 
   <section class="cd-section">
+    <div class="today-msg" data-today style="display:none"></div>
     <div class="cd" data-countdown data-reveal>
-      <div><b data-cd-days>0</b><span>Days</span></div>
+      <div><b data-cd-days>0</b><span data-i18n="days">Days</span></div>
       <i>:</i>
-      <div><b data-cd-hours>0</b><span>Hours</span></div>
+      <div><b data-cd-hours>0</b><span data-i18n="hours">Hours</span></div>
       <i>:</i>
-      <div><b data-cd-mins>0</b><span>Minutes</span></div>
+      <div><b data-cd-mins>0</b><span data-i18n="minutes">Minutes</span></div>
       <i>:</i>
-      <div><b data-cd-secs>0</b><span>Seconds</span></div>
+      <div><b data-cd-secs>0</b><span data-i18n="seconds">Seconds</span></div>
     </div>
+  </section>
+
+  <section class="schedule-section" data-schedule-section style="display:none">
+    <h2 data-reveal data-i18n="schedule">Schedule</h2>
+    <div class="tw-timeline" data-schedule></div>
   </section>
 
   <section class="story-section" data-story-section>
@@ -52,6 +59,10 @@
       <div class="detail-line" data-reveal><span class="lbl">When</span><span data-date-long></span> · <span data-time></span></div>
       <div class="detail-line" data-reveal><span class="lbl">Where</span><span data-venue-name></span></div>
       <div class="detail-line" data-reveal><span class="lbl">Address</span><span data-venue-address></span></div>
+      <div class="map-block" data-map-section data-reveal style="display:none">
+        <div class="map-embed" data-map-embed></div>
+        <a class="directions-btn" data-directions href="#" data-i18n="directions">Get Directions</a>
+      </div>
     </div>
   </section>
 
@@ -61,16 +72,30 @@
   </section>
 
   <section class="rsvp-section">
-    <h2 data-reveal>Reserve your seat</h2>
+    <h2 data-reveal data-i18n="rsvp">Reserve your seat</h2>
+    <p class="confirmed-line" data-confirmed-section data-reveal style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp" data-reveal>
-      <label>Full name<input type="text" name="guest_name" required /></label>
-      <label>Attending<select name="attending"><option value="yes">Yes — count me in</option><option value="no">No — with regret</option></select></label>
-      <label>Guests<input type="number" name="guest_count" min="0" value="1" /></label>
-      <label>Message<textarea name="message" rows="3"></textarea></label>
-      <button type="submit">Confirm attendance</button>
+      <label data-i18n="name">Full name<input type="text" name="guest_name" required /></label>
+      <label data-i18n="attend_q">Attending<select name="attending"><option value="yes" data-i18n="yes">Yes — count me in</option><option value="no" data-i18n="no">No — with regret</option></select></label>
+      <label data-i18n="guests">Guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      <label data-meal-field style="display:none" data-i18n="meal">Meal preference<select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select></label>
+      <label data-i18n="message">Message<textarea name="message" rows="3"></textarea></label>
+      <button type="submit" data-i18n="send">Confirm attendance</button>
       <p class="status" data-rsvp-status></p>
     </form>
     <p class="rsvp-phone" data-rsvp-phone></p>
+    <p style="text-align:center;margin-top:18px"><a class="share-btn" data-share-whatsapp href="#" data-i18n="share">Share on WhatsApp</a></p>
+  </section>
+
+  <section class="guestbook-section" data-guestbook-section>
+    <h2 data-reveal data-i18n="wishes">Wishes &amp; Blessings</h2>
+    <form data-wish-form class="wish-form" data-reveal>
+      <input type="text" name="guest_name" data-i18n-ph="wish_name" placeholder="Your name" required />
+      <textarea name="message" rows="2" data-i18n-ph="wish_msg" placeholder="Your wish for the couple" required></textarea>
+      <button type="submit" data-i18n="wish_send">Post wish</button>
+      <p class="status" data-wish-status></p>
+    </form>
+    <div class="wishes-list" data-wishes></div>
   </section>
 
   <footer class="foot">

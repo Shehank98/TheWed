@@ -18,6 +18,7 @@
   <header class="hero reveal-up">
     <div class="hero-media" data-hero-media></div>
     <div class="hero-copy">
+      <p class="guest-greeting" data-guest-greeting-section style="display:none"><span data-guest-greeting></span></p>
       <p class="label">The wedding of</p>
       <h1><span data-groom>—</span><br><span class="thin">and</span><br><span data-bride>—</span></h1>
       <p class="meta"><span data-date-long></span> · <span data-venue-name></span></p>
@@ -25,12 +26,18 @@
   </header>
 
   <section class="cd reveal-up">
+    <div class="today-msg" data-today style="display:none"></div>
     <div class="cd-line" data-countdown>
-      <div><b data-cd-days>0</b><span>days</span></div>
-      <div><b data-cd-hours>0</b><span>hrs</span></div>
-      <div><b data-cd-mins>0</b><span>min</span></div>
-      <div><b data-cd-secs>0</b><span>sec</span></div>
+      <div><b data-cd-days>0</b><span data-i18n="days">days</span></div>
+      <div><b data-cd-hours>0</b><span data-i18n="hours">hrs</span></div>
+      <div><b data-cd-mins>0</b><span data-i18n="minutes">min</span></div>
+      <div><b data-cd-secs>0</b><span data-i18n="seconds">sec</span></div>
     </div>
+  </section>
+
+  <section class="block reveal-up" data-schedule-section style="display:none">
+    <p class="block-label" data-i18n="schedule">Schedule</p>
+    <div class="tw-timeline" data-schedule></div>
   </section>
 
   <section class="block reveal-up" data-story-section>
@@ -46,6 +53,10 @@
       <div class="row"><span class="k">Venue</span><span class="v" data-venue-name></span></div>
       <div class="row"><span class="k">Address</span><span class="v" data-venue-address></span></div>
     </div>
+    <div class="map-block" data-map-section style="display:none">
+      <div class="map-embed" data-map-embed></div>
+      <a class="directions-btn" data-directions href="#" data-i18n="directions">Get Directions</a>
+    </div>
   </section>
 
   <section class="block reveal-up" data-gallery-section>
@@ -54,20 +65,36 @@
   </section>
 
   <section class="block reveal-up">
-    <p class="block-label">04 — RSVP</p>
+    <p class="block-label" data-i18n="rsvp">04 — RSVP</p>
+    <p class="confirmed-line" data-confirmed-section style="display:none"><b data-confirmed-count>0</b> <span data-i18n="confirmed">guests confirmed</span></p>
     <form data-thewed-rsvp class="rsvp">
       <div class="pair">
-        <label>Name<input type="text" name="guest_name" required /></label>
-        <label>Guests<input type="number" name="guest_count" min="0" value="1" /></label>
+        <label data-i18n="name">Name<input type="text" name="guest_name" required /></label>
+        <label data-i18n="guests">Guests<input type="number" name="guest_count" min="0" value="1" /></label>
       </div>
-      <label>Attending?
-        <select name="attending"><option value="yes">Yes, I'll be there</option><option value="no">Sorry, can't make it</option></select>
+      <label data-i18n="attend_q">Attending?
+        <select name="attending"><option value="yes" data-i18n="yes">Yes, I'll be there</option><option value="no" data-i18n="no">Sorry, can't make it</option></select>
       </label>
-      <label>Message<textarea name="message" rows="2"></textarea></label>
-      <button type="submit">Submit →</button>
+      <label data-meal-field style="display:none" data-i18n="meal">Meal preference
+        <select name="meal_preference"><option value="">—</option><option value="Veg">Vegetarian</option><option value="Non-veg">Non-vegetarian</option><option value="Vegan">Vegan</option></select>
+      </label>
+      <label data-i18n="message">Message<textarea name="message" rows="2"></textarea></label>
+      <button type="submit" data-i18n="send">Submit →</button>
       <p class="status" data-rsvp-status></p>
     </form>
     <p class="rsvp-phone mono" data-rsvp-phone></p>
+    <p style="margin-top:16px"><a class="share-btn" data-share-whatsapp href="#" data-i18n="share">Share on WhatsApp</a></p>
+  </section>
+
+  <section class="block reveal-up" data-guestbook-section>
+    <p class="block-label" data-i18n="wishes">05 — Wishes</p>
+    <form data-wish-form class="wish-form">
+      <input type="text" name="guest_name" data-i18n-ph="wish_name" placeholder="Your name" required />
+      <textarea name="message" rows="2" data-i18n-ph="wish_msg" placeholder="Your wish for the couple" required></textarea>
+      <button type="submit" data-i18n="wish_send">Post wish</button>
+      <p class="status" data-wish-status></p>
+    </form>
+    <div class="wishes-list" data-wishes></div>
   </section>
 
   <footer class="foot">
