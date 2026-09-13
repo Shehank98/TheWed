@@ -112,6 +112,13 @@
             <div id="gallery-current" class="gallery-imgs"></div>
             <label class="upload-btn">Add gallery photo<input type="file" accept="image/*" data-upload="gallery" /></label>
           </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="guest_photos_enabled" checked style="width:auto;" />
+              Let guests add their own photos to the gallery
+            </label>
+            <div class="hint">Guests can upload snapshots from your invitation page — a live photo wall. Any photo they add appears above and you can remove it.</div>
+          </div>
         </fieldset>
 
         <div id="publish-box" class="panel" style="padding:16px;">
@@ -242,6 +249,7 @@
       document.getElementById('music_url').value = inv.musicUrl || '';
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
+      document.getElementById('guest_photos_enabled').checked = cf.guestPhotos !== false;
       loadEventRows();
       loadMilestoneRows();
     }
@@ -449,6 +457,7 @@
       state.invitation.languageDefault = 'en';
       const cf = {};
       document.querySelectorAll('[data-cf]').forEach((el) => { if (el.value) cf[el.dataset.cf] = el.value; });
+      cf.guestPhotos = document.getElementById('guest_photos_enabled').checked;
       body.custom_fields = cf;
       state.invitation.customFields = cf;
       return body;

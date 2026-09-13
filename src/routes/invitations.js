@@ -83,6 +83,68 @@ router.get('/public/:slug', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/invitations/public/:slug/photos — a guest adds a photo to the
+ * gallery from the public invitation page. Enabled unless the couple turned it
+ * off (custom_fields.guestPhotos === false). Stored as a normal gallery image
+ * so it shows in the carousel and the couple can moderate it in the editor.
+ */
+router.post('/public/:slug/photos', upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image file provided (field name: image)' });
+    if (!/^image\//.test(req.file.mimetype)) return res.status(400).json({ error: 'File must be an image' });
+    if (!storage.isConfigured()) {
+      return res.status(503).json({ error: 'Photo uploads are not available right now.' });
+    }
+
+    const invitation = await db('invitations').where({ slug: req.params.slug }).first();
+    if (!invitation || invitation.status !== 'published') {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+    const cf = invitation.custom_fields || {};
+    if (cf.guestPhotos === false) {
+      return res.status(403).json({ error: 'The couple has turned off guest photos for this invitation.' });
+    }
+
+    // Soft cap to keep a public endpoint from being flooded.
+    const countRow = await db('invitation_images')
+      .where({ invitation_id: invitation.id, image_type: 'gallery' })
+      .count({ c: '*' })
+      .first();
+    if (countRow && Number(countRow.c) >= 300) {
+      return res.status(429).json({ error: 'The gallery is full — thank you!' });
+    }
+
+    const folderName = `invitation-${invitation.order_id}`;
+    const ext = (req.file.originalname.match(/\.[a-zA-Z0-9]+$/) || [''])[0];
+    const filename = `guest-${Date.now()}${ext}`;
+    const { fileId, url } = await storage.uploadImage({
+      folderName,
+      filename,
+      mimeType: req.file.mimetype,
+      buffer: req.file.buffer,
+    });
+
+    const maxPos = await db('invitation_images')
+      .where({ invitation_id: invitation.id, image_type: 'gallery' })
+      .max('position as m')
+      .first();
+    const position = (maxPos && maxPos.m != null ? Number(maxPos.m) : -1) + 1;
+
+    await db('invitation_images').insert({
+      invitation_id: invitation.id,
+      drive_file_id: fileId,
+      drive_url: url,
+      image_type: 'gallery',
+      position,
+    });
+
+    return res.status(201).json({ url });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 /** GET /api/invitations/public/:slug/wishes — approved wishes for live refresh. */
 router.get('/public/:slug/wishes', async (req, res, next) => {
   try {

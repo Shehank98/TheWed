@@ -351,6 +351,23 @@
       '.tw-rsvp-actions .tw-rsvp-no:hover{opacity:1}' +
       '@keyframes twYesPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}' +
       '@media(prefers-reduced-motion:reduce){.tw-rsvp-actions .tw-rsvp-yes{animation:none}}' +
+      // Animated photo carousel (auto-scrolling "crawler" with edge fade).
+      '.tw-carousel{position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}' +
+      '.tw-carousel-track{display:flex;gap:14px;width:max-content;will-change:transform;padding:6px 0}' +
+      '.tw-carousel-track.tw-marquee{animation:twMarquee linear infinite}' +
+      '.tw-carousel:hover .tw-carousel-track.tw-marquee{animation-play-state:paused}' +
+      '.tw-slide{flex:0 0 auto;margin:0}' +
+      '.tw-slide img{height:230px;width:auto;max-width:none;border-radius:14px;object-fit:cover;display:block;box-shadow:0 10px 26px rgba(0,0,0,.16);cursor:pointer;transition:transform .35s ease,box-shadow .35s ease}' +
+      '.tw-slide img:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 16px 34px rgba(0,0,0,.24)}' +
+      '@keyframes twMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}' +
+      '.tw-gallery-add{text-align:center;margin-top:18px}' +
+      '.tw-gallery-add-btn{cursor:pointer;border:1px dashed currentColor;background:transparent;color:inherit;border-radius:30px;padding:10px 22px;font-size:14px;letter-spacing:.5px;opacity:.85;transition:opacity .15s ease,transform .12s ease}' +
+      '.tw-gallery-add-btn:hover{opacity:1;transform:translateY(-1px)}' +
+      '.tw-gallery-add-btn:disabled{opacity:.5;cursor:default}' +
+      '.tw-gallery-add-status{display:block;font-size:13px;opacity:.75;margin-top:8px;min-height:16px}' +
+      '.tw-gallery-empty{text-align:center;opacity:.7;font-size:14px}' +
+      '@media(max-width:560px){.tw-slide img{height:168px}}' +
+      '@media(prefers-reduced-motion:reduce){.tw-carousel-track.tw-marquee{animation:none}.tw-carousel{overflow-x:auto}}' +
       '.tw-tl-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}' +
       '.tw-tl-dress{font-size:13px;opacity:.85;margin-top:3px}' +
       '.tw-cal{display:inline-flex;gap:6px;align-items:center}' +
@@ -519,6 +536,88 @@
     }
   }
 
+  // ---- Photo gallery: animated auto-scrolling carousel + guest uploads ----
+  // Rebuilds [data-gallery] as a marquee "crawler". Guests can add their own
+  // photos when the couple leaves it enabled (customFields.guestPhotos !== false).
+  function renderGallery(data) {
+    var el = document.querySelector('[data-gallery]');
+    var section = document.querySelector('[data-gallery-section]');
+    if (!el) return;
+    var list = (data.images && data.images.gallery) ? data.images.gallery.slice() : [];
+    var inv = data.invitation || {};
+    var cf = inv.customFields || {};
+    var canUpload = (cf.guestPhotos !== false) && data.mode === 'live' && !!inv.slug;
+
+    if (!list.length && !canUpload) { if (section) section.style.display = 'none'; el.innerHTML = ''; return; }
+    if (section) section.style.display = '';
+
+    function slide(g, clone) {
+      return '<figure class="tw-slide"' + (clone ? ' aria-hidden="true"' : '') + '>' +
+        '<img ' + (clone ? 'data-clone ' : '') + 'src="' + escapeHtml(g.url) + '" alt="" loading="lazy"/></figure>';
+    }
+    var loop = list.length >= 4; // enough slides to scroll seamlessly
+    var body;
+    if (list.length) {
+      var slides = list.map(function (g) { return slide(g, false); }).join('');
+      var clones = loop ? list.map(function (g) { return slide(g, true); }).join('') : '';
+      body = '<div class="tw-carousel"><div class="tw-carousel-track' + (loop ? ' tw-marquee' : '') + '">' + slides + clones + '</div></div>';
+    } else {
+      body = '<p class="tw-gallery-empty">Be the first to add a photo.</p>';
+    }
+    var addUi = canUpload
+      ? '<div class="tw-gallery-add"><input type="file" accept="image/*" data-guest-photo hidden />' +
+        '<button type="button" class="tw-gallery-add-btn">+ Add your photo</button>' +
+        '<span class="tw-gallery-add-status" data-guest-photo-status></span></div>'
+      : '';
+    el.innerHTML = body + addUi;
+
+    if (loop) {
+      var track = el.querySelector('.tw-carousel-track');
+      if (track) track.style.animationDuration = Math.max(20, list.length * 4) + 's';
+    }
+    if (canUpload) wireGuestPhoto(el, inv.slug);
+  }
+
+  function wireGuestPhoto(el, slug) {
+    var btn = el.querySelector('.tw-gallery-add-btn');
+    var input = el.querySelector('[data-guest-photo]');
+    var status = el.querySelector('[data-guest-photo-status]');
+    if (!btn || !input) return;
+    btn.addEventListener('click', function () { input.click(); });
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (!/^image\//.test(file.type)) { if (status) status.textContent = 'Please choose an image file.'; return; }
+      if (status) status.textContent = 'Uploading your photo…';
+      btn.disabled = true;
+      var fd = new FormData(); fd.append('image', file);
+      fetch('/api/invitations/public/' + encodeURIComponent(slug) + '/photos', { method: 'POST', body: fd })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j.error || 'Upload failed');
+          if (status) status.textContent = 'Thank you! Your photo is now in the gallery.';
+          appendGallerySlide(el, res.j.url);
+          launchConfetti();
+        })
+        .catch(function (err) { if (status) status.textContent = err.message; })
+        .finally(function () { btn.disabled = false; input.value = ''; });
+    });
+  }
+
+  function appendGallerySlide(el, url) {
+    var track = el.querySelector('.tw-carousel-track');
+    if (!track) {
+      var empty = el.querySelector('.tw-gallery-empty'); if (empty) empty.remove();
+      var wrap = document.createElement('div'); wrap.className = 'tw-carousel';
+      wrap.innerHTML = '<div class="tw-carousel-track"></div>';
+      el.insertBefore(wrap, el.firstChild);
+      track = wrap.querySelector('.tw-carousel-track');
+    }
+    var fig = document.createElement('figure'); fig.className = 'tw-slide';
+    fig.innerHTML = '<img src="' + url + '" alt="" loading="lazy"/>';
+    track.appendChild(fig);
+  }
+
   // ---- Photo gallery lightbox (attached once) ----
   var lightbox = null;
   var lightboxImgs = [];
@@ -556,7 +655,7 @@
     grid.addEventListener('click', function (e) {
       var img = e.target.closest && e.target.closest('img');
       if (!img) return;
-      lightboxImgs = Array.prototype.map.call(grid.querySelectorAll('img'), function (i) { return i.src; });
+      lightboxImgs = Array.prototype.map.call(grid.querySelectorAll('img:not([data-clone])'), function (i) { return i.src; });
       var idx = lightboxImgs.indexOf(img.src);
       lightbox.style.display = 'flex';
       TheWed._lbShow(idx < 0 ? 0 : idx);
@@ -852,6 +951,7 @@
         // Shared behaviors
         renderEvents(data);
         renderMilestones(data);
+        renderGallery(data);
         injectRsvpFab();
         wireGalleryLightbox();
         wireMusic(data.invitation);
