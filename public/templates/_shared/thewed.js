@@ -30,7 +30,7 @@
     en: {
       greeting: 'Dear', directions: 'Get Directions', schedule: 'Schedule', today: "Today's the day!",
       days: 'Days', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds',
-      rsvp: 'RSVP', name: 'Your name', accept: 'Joyfully Accept', decline: 'Decline',
+      rsvp: 'RSVP', name: 'Your name', accept: 'Joyfully Accept', decline: 'Regretfully Decline',
       confirmed: 'guests confirmed', guestbook: 'Guestbook', wishes: 'Wishes & Blessings',
       wish_name: 'Your name', wish_msg: 'Your wish for the couple', wish_send: 'Post wish',
       share: 'Share on WhatsApp', mute: 'Music: off', unmute: 'Music: on', no_wishes: 'Be the first to leave a wish.',
