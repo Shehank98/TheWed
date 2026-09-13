@@ -4,7 +4,7 @@ const ExcelJS = require('exceljs');
 const QRCode = require('qrcode');
 const db = require('../db');
 const config = require('../config');
-const drive = require('../utils/drive');
+const storage = require('../utils/storage');
 const { generateUniqueSlug, generateGuestToken } = require('../utils/codes');
 const { renderPayload, loadImages, normalizeSchedule, loadEvents, loadMilestones, EVENT_TYPES } = require('../utils/serialize');
 
@@ -284,9 +284,9 @@ router.post('/token/:token/images', upload.single('image'), async (req, res, nex
       return res.status(400).json({ error: `image_type must be one of ${IMAGE_TYPES.join(', ')}` });
     }
 
-    if (!drive.isConfigured()) {
+    if (!storage.isConfigured()) {
       return res.status(503).json({
-        error: 'Image storage is not configured on the server (Google Drive service account missing).',
+        error: 'Image storage is not configured on the server (Firebase or Google Drive credentials missing).',
       });
     }
 
@@ -296,7 +296,7 @@ router.post('/token/:token/images', upload.single('image'), async (req, res, nex
         .where({ invitation_id: ctx.invitation.id, image_type: 'hero' })
         .first();
       if (existingHero) {
-        await drive.deleteFile(existingHero.drive_file_id).catch(() => {});
+        await storage.deleteFile(existingHero.drive_file_id).catch(() => {});
         await db('invitation_images').where({ id: existingHero.id }).del();
       }
     }
@@ -305,7 +305,7 @@ router.post('/token/:token/images', upload.single('image'), async (req, res, nex
     const ext = (req.file.originalname.match(/\.[a-zA-Z0-9]+$/) || [''])[0];
     const filename = `${image_type}-${Date.now()}${ext}`;
 
-    const { fileId, url } = await drive.uploadImage({
+    const { fileId, url } = await storage.uploadImage({
       folderName,
       filename,
       mimeType: req.file.mimetype,
@@ -347,7 +347,7 @@ router.delete('/token/:token/images/:image_id', async (req, res, next) => {
       .first();
     if (!image) return res.status(404).json({ error: 'Image not found' });
 
-    await drive.deleteFile(image.drive_file_id).catch(() => {});
+    await storage.deleteFile(image.drive_file_id).catch(() => {});
     await db('invitation_images').where({ id: image.id }).del();
 
     return res.json({ ok: true });

@@ -7,7 +7,8 @@ is generated and the invitation goes live with animations and an RSVP form.
 Invitations auto-archive 90 days after the wedding date.
 
 Plain HTML/CSS/JS frontend (no framework) · Node/Express backend · PostgreSQL
-(Knex) · Google Drive for image storage · email via a Google Apps Script web app.
+(Knex) · Firebase Cloud Storage for image uploads (Google Drive fallback) · email
+via a Google Apps Script web app.
 
 ---
 
@@ -17,7 +18,7 @@ Plain HTML/CSS/JS frontend (no framework) · Node/Express backend · PostgreSQL
 | --------------- | -------------------------------------------------- |
 | Server          | Node.js + Express                                  |
 | Database        | PostgreSQL via Knex (migrations + seeds)           |
-| Image storage   | Google Drive API (service account)                 |
+| Image storage   | Firebase Cloud Storage (Google Drive fallback)     |
 | Email           | Google Apps Script web app (Gmail/MailApp)         |
 | RSVP export     | ExcelJS (`.xlsx`)                                  |
 | Scheduling      | node-cron (in-process) or Railway cron             |
@@ -39,15 +40,15 @@ Then open:
 - `http://localhost:3000/` — storefront (pick a template, place an order)
 - `http://localhost:3000/admin` — admin panel (sign in with ADMIN_USERNAME / ADMIN_PASSWORD)
 
-### Try the flow without email/Drive configured
+### Try the flow without email/storage configured
 
-Everything works without Google integrations set up:
+Everything works without Google/Firebase integrations set up:
 
 1. Place an order on the storefront → you land on the bank-instructions page.
 2. In **/admin → Orders**, click **Mark paid**. Since email isn't configured, the
    admin screen shows the **magic link** inline (it's also logged to the server console).
 3. Open that magic link (`/edit/:token`) to build the invitation. (Image upload is
-   disabled until Google Drive is configured; every other field works.)
+   disabled until image storage is configured; every other field works.)
 4. Click **Publish** → you get a public URL `/i/:slug`.
 
 ---
@@ -62,8 +63,12 @@ See [`.env.example`](./.env.example) for the full list. Highlights:
 - **Email (Google Apps Script):** `GOOGLE_APPSCRIPT_EMAIL_URL`, `EMAIL_SHARED_SECRET`.
   Deploy [`docs/appscript-email.gs`](./docs/appscript-email.gs) as a Web App and paste
   its `/exec` URL. The backend POSTs `{ secret, to, subject, html, fromName }`.
-- **Google Drive:** `GOOGLE_SERVICE_ACCOUNT_JSON` (or `GOOGLE_APPLICATION_CREDENTIALS`
-  path) + `GOOGLE_DRIVE_PARENT_FOLDER_ID` (a folder shared with the service account).
+- **Image storage — Firebase (preferred):** `FIREBASE_SERVICE_ACCOUNT_JSON` (or
+  `FIREBASE_APPLICATION_CREDENTIALS` path) + `FIREBASE_STORAGE_BUCKET`. Couples upload
+  their own photos; objects are made public and embedded directly in the invitation.
+- **Image storage — Google Drive (fallback):** `GOOGLE_SERVICE_ACCOUNT_JSON` (or
+  `GOOGLE_APPLICATION_CREDENTIALS` path) + `GOOGLE_DRIVE_PARENT_FOLDER_ID` (a folder
+  shared with the service account). Used only when Firebase isn't configured.
 - **Bank details:** `BANK_*` — shown to customers on the order page.
 
 ---

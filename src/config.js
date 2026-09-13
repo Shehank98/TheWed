@@ -24,6 +24,15 @@ const config = {
     parentFolderId: process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID || '',
   },
 
+  firebase: {
+    serviceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '',
+    credentialsPath:
+      process.env.FIREBASE_APPLICATION_CREDENTIALS ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      '',
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
+  },
+
   bank: {
     name: process.env.BANK_NAME || 'Bank of Ceylon',
     accountName: process.env.BANK_ACCOUNT_NAME || 'TheWed (Pvt) Ltd',

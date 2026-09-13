@@ -353,6 +353,21 @@
   function injectSharedStyles() {
     if (document.getElementById('tw-shared-styles')) return;
     var css = '' +
+      // Mobile safety: openers slide off-screen via transforms and can leave a
+      // horizontal scrollbar; clip it. Also keep form controls inside their box.
+      'html,body{max-width:100%;overflow-x:hidden}' +
+      // The opener is position:fixed, so its panels sliding out via transform
+      // are NOT clipped by body overflow — clip them at the opener's own box.
+      '[data-opener]{overflow:hidden}' +
+      '*{box-sizing:border-box}' +
+      'img,svg,video,iframe{max-width:100%}' +
+      '[data-thewed-rsvp] input,[data-thewed-rsvp] select,[data-thewed-rsvp] textarea,' +
+      '[data-wish-form] input,[data-wish-form] textarea{max-width:100%;box-sizing:border-box}' +
+      // Let RSVP form flex items (e.g. the Adults/Children row) shrink instead
+      // of overflowing: flex items default to min-width:auto and won't shrink
+      // below a number input's intrinsic width.
+      '[data-thewed-rsvp] label,[data-thewed-rsvp] input,[data-thewed-rsvp] select{min-width:0}' +
+      '[data-thewed-rsvp] input[type=number]{width:100%}' +
       '.tw-tl-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}' +
       '.tw-tl-dress{font-size:13px;opacity:.85;margin-top:3px}' +
       '.tw-cal{display:inline-flex;gap:6px;align-items:center}' +
