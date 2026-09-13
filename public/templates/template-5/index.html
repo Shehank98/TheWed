@@ -58,6 +58,11 @@
     <div class="tw-timeline" data-schedule></div>
   </section>
 
+  <section class="story" data-story-timeline-section style="display:none">
+    <h2 class="orn-title" data-i18n="our_story">Our Story</h2>
+    <div data-story-timeline></div>
+  </section>
+
   <section class="story reveal" data-story-section>
     <h2 class="orn-title">Our Journey</h2>
     <div class="story-photo" data-couple-photo></div>
@@ -91,7 +96,10 @@
       <label data-i18n="attend_q">Will you grace the occasion?
         <select name="attending"><option value="yes" data-i18n="yes">Yes, with pleasure</option><option value="no" data-i18n="no">Regretfully unable</option></select>
       </label>
-      <label data-i18n="guests">Number in your party<input type="number" name="guest_count" min="0" value="1" /></label>
+      <div style="display:flex;gap:12px;">
+        <label style="flex:1;" data-i18n="adults">Adults<input type="number" name="guest_count" min="0" value="1" /></label>
+        <label style="flex:1;" data-i18n="children">Children<input type="number" name="children_count" min="0" value="0" /></label>
+      </div>
       <label data-i18n="message">Your blessings<textarea name="message" rows="3"></textarea></label>
       <button type="submit" data-i18n="send">Send Response</button>
       <p class="status" data-rsvp-status></p>

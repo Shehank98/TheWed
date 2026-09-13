@@ -71,6 +71,13 @@
         </fieldset>
 
         <fieldset>
+          <legend>Our Story timeline <span class="hint">(optional)</span></legend>
+          <p class="hint" style="margin:0 0 10px;">Add milestones (How We Met, The Proposal, The Big Day…) shown as a timeline with photos. Leave empty to hide this section.</p>
+          <div id="milestone-rows"></div>
+          <button type="button" class="btn ghost small" id="add-milestone-row">+ Add milestone</button>
+        </fieldset>
+
+        <fieldset>
           <legend>Music &amp; language</legend>
           <div class="field">
             <label>Background music (MP3 URL)</label>
@@ -205,7 +212,7 @@
     }
     function previewPayload() {
       return { template: state.template, invitation: state.invitation, images: state.images,
-        events: state.events || [], publicUrl: state.publicUrl || '', mode: 'preview' };
+        events: state.events || [], milestones: state.milestones || [], publicUrl: state.publicUrl || '', mode: 'preview' };
     }
     window.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'thewed:ready') { ready = true; postPreview(); }
@@ -246,6 +253,7 @@
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
       loadEventRows();
+      loadMilestoneRows();
     }
 
     // ---- events repeater ----
@@ -280,6 +288,7 @@
         '</div>' +
         '<input type="text" class="e-venue" placeholder="Venue name" style="margin-top:6px;" />' +
         '<input type="text" class="e-map" placeholder="Google Maps link (optional)" style="margin-top:6px;" />' +
+        '<input type="text" class="e-dress" placeholder="Dress code (optional)" style="margin-top:6px;" />' +
         '<div class="e-private-wrap" style="margin-top:8px;"></div>' +
         '<button type="button" class="btn danger small e-del" style="margin-top:8px;">Remove event</button>';
       row.querySelector('.e-name').value = ev.event_name || '';
@@ -287,6 +296,7 @@
       row.querySelector('.e-time').value = ev.event_time || '';
       row.querySelector('.e-venue').value = ev.venue_name || '';
       row.querySelector('.e-map').value = ev.map_link || '';
+      row.querySelector('.e-dress').value = ev.dress_code || '';
       row.querySelectorAll('input, select').forEach((inp) => {
         inp.addEventListener('input', onEventInput);
         if (inp.tagName === 'SELECT') inp.addEventListener('change', onEventInput);
@@ -304,6 +314,7 @@
           event_time: row.querySelector('.e-time').value || null,
           venue_name: row.querySelector('.e-venue').value.trim() || null,
           map_link: row.querySelector('.e-map').value.trim() || null,
+          dress_code: row.querySelector('.e-dress').value.trim() || null,
           sort_order: i,
         };
         if (row.dataset.id) o.id = Number(row.dataset.id);
@@ -317,7 +328,7 @@
         id: e.id || null, name: e.event_name || (e.event_type !== 'Custom' ? e.event_type : 'Event'),
         type: e.event_type, date: e.event_date || '', time: e.event_time || '',
         venueName: e.venue_name || '', venueAddress: '', mapLink: e.map_link || '',
-        sortOrder: e.sort_order, isPrivate: !!e.is_private,
+        dressCode: e.dress_code || '', sortOrder: e.sort_order, isPrivate: !!e.is_private,
       }));
     }
     let eventSaveTimer = null;
@@ -356,6 +367,82 @@
       const cb = wrap.querySelector('.e-private');
       cb.addEventListener('change', () => { row.dataset.isPrivate = cb.checked ? 'true' : 'false'; onEventInput(); });
     };
+
+    // ---- story milestones repeater (optional) ----
+    async function loadMilestoneRows() {
+      const wrap = document.getElementById('milestone-rows');
+      wrap.innerHTML = '';
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/milestones');
+        const data = await res.json();
+        (data.milestones || []).forEach((m) => addMilestoneRow(m));
+      } catch (e) { /* ignore */ }
+      syncPreviewMilestones();
+    }
+    function addMilestoneRow(m) {
+      m = m || {};
+      const wrap = document.getElementById('milestone-rows');
+      const row = document.createElement('div');
+      row.className = 'ms-row';
+      row.dataset.id = m.id || '';
+      row.style.cssText = 'border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#faf8f4;';
+      row.innerHTML =
+        '<div style="display:grid;grid-template-columns:1fr 130px;gap:6px;">' +
+          '<input type="text" class="m-title" placeholder="Milestone (e.g. How We Met)" />' +
+          '<input type="text" class="m-date" placeholder="Date / label" />' +
+        '</div>' +
+        '<textarea class="m-body" rows="2" placeholder="A sentence about this moment…" style="margin-top:6px;"></textarea>' +
+        '<input type="text" class="m-img" placeholder="Photo URL (optional)" style="margin-top:6px;" />' +
+        '<button type="button" class="btn danger small m-del" style="margin-top:8px;">Remove milestone</button>';
+      row.querySelector('.m-title').value = m.title || '';
+      row.querySelector('.m-date').value = m.milestone_date || '';
+      row.querySelector('.m-body').value = m.body || '';
+      row.querySelector('.m-img').value = m.image_url || '';
+      row.querySelectorAll('input, textarea').forEach((inp) => inp.addEventListener('input', onMilestoneInput));
+      row.querySelector('.m-del').addEventListener('click', () => { row.remove(); onMilestoneInput(); });
+      wrap.appendChild(row);
+    }
+    function collectMilestones() {
+      return Array.prototype.map.call(document.querySelectorAll('#milestone-rows .ms-row'), (row, i) => {
+        const o = {
+          title: row.querySelector('.m-title').value.trim(),
+          milestone_date: row.querySelector('.m-date').value.trim() || null,
+          body: row.querySelector('.m-body').value.trim() || null,
+          image_url: row.querySelector('.m-img').value.trim() || null,
+          sort_order: i,
+        };
+        if (row.dataset.id) o.id = Number(row.dataset.id);
+        return o;
+      }).filter((m) => m.title || m.body || m.image_url);
+    }
+    function syncPreviewMilestones() {
+      state.milestones = collectMilestones().map((m) => ({
+        id: m.id || null, title: m.title || '', date: m.milestone_date || '',
+        body: m.body || '', imageUrl: m.image_url || '', sortOrder: m.sort_order,
+      }));
+    }
+    let msSaveTimer = null;
+    function onMilestoneInput() {
+      syncPreviewMilestones();
+      postPreview();
+      saveState.textContent = 'Saving…';
+      clearTimeout(msSaveTimer);
+      msSaveTimer = setTimeout(saveMilestones, 700);
+    }
+    async function saveMilestones() {
+      try {
+        const res = await api('/token/' + encodeURIComponent(token) + '/milestones', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ milestones: collectMilestones() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error('save failed');
+        const rows = document.querySelectorAll('#milestone-rows .ms-row');
+        (data.milestones || []).forEach((m, i) => { if (rows[i]) rows[i].dataset.id = m.id; });
+        saveState.textContent = 'Saved ' + new Date().toLocaleTimeString();
+      } catch (e) { saveState.textContent = 'Could not save milestones'; }
+    }
+    document.getElementById('add-milestone-row').addEventListener('click', () => { addMilestoneRow(); });
 
     function collect() {
       const body = {
@@ -481,6 +568,7 @@
       btn.disabled = true; btn.textContent = 'Publishing…';
       await save();
       await saveEvents();
+      await saveMilestones();
       try {
         const res = await api('/token/' + encodeURIComponent(token) + '/publish', { method: 'POST' });
         const data = await res.json();

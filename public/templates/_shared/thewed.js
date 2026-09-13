@@ -36,6 +36,8 @@
       send: 'Send', confirmed: 'guests confirmed', guestbook: 'Guestbook', wishes: 'Wishes & Blessings',
       wish_name: 'Your name', wish_msg: 'Your wish for the couple', wish_send: 'Post wish',
       share: 'Share on WhatsApp', mute: 'Music: off', unmute: 'Music: on', no_wishes: 'Be the first to leave a wish.',
+      dress_code: 'Dress code', add_calendar: 'Add to Calendar', rsvp_cta: 'RSVP', adults: 'Adults', children: 'Children',
+      our_story: 'Our Story', thank_you: 'Thank you!',
     },
     si: {
       greeting: 'ආදරණීය', directions: 'දිශාව සොයන්න', schedule: 'වැඩසටහන', today: 'අද තමයි ඒ දවස!',
@@ -45,6 +47,8 @@
       send: 'යවන්න', confirmed: 'අමුත්තන් තහවුරු කර ඇත', guestbook: 'සුබ පැතුම් පොත', wishes: 'සුබ පැතුම්',
       wish_name: 'ඔබේ නම', wish_msg: 'යුවළ සඳහා ඔබේ සුබ පැතුම', wish_send: 'පළ කරන්න',
       share: 'WhatsApp හරහා බෙදන්න', mute: 'සංගීතය: නැත', unmute: 'සංගීතය: ඇත', no_wishes: 'පළමු සුබ පැතුම තබන්න.',
+      dress_code: 'ඇඳුම් රටාව', add_calendar: 'දින දර්ශනයට එක් කරන්න', rsvp_cta: 'පැමිණීම දන්වන්න', adults: 'වැඩිහිටියන්', children: 'ළමයි',
+      our_story: 'අපගේ කතාව', thank_you: 'ස්තුතියි!',
     },
     ta: {
       greeting: 'அன்பார்ந்த', directions: 'வழி காட்டு', schedule: 'நிகழ்ச்சி நிரல்', today: 'இன்று தான் அந்த நாள்!',
@@ -54,6 +58,8 @@
       send: 'அனுப்பு', confirmed: 'விருந்தினர்கள் உறுதி', guestbook: 'வாழ்த்து புத்தகம்', wishes: 'வாழ்த்துக்கள்',
       wish_name: 'உங்கள் பெயர்', wish_msg: 'தம்பதியருக்கு உங்கள் வாழ்த்து', wish_send: 'வாழ்த்து இடு',
       share: 'WhatsApp இல் பகிர்', mute: 'இசை: இல்லை', unmute: 'இசை: ஆம்', no_wishes: 'முதல் வாழ்த்தை இடுங்கள்.',
+      dress_code: 'உடை நடை', add_calendar: 'நாட்காட்டியில் சேர்', rsvp_cta: 'வருகையை உறுதிசெய்', adults: 'பெரியவர்கள்', children: 'குழந்தைகள்',
+      our_story: 'எங்கள் கதை', thank_you: 'நன்றி!',
     },
   };
   var currentLang = 'en';
@@ -88,9 +94,14 @@
     },
     wishes: [{ guest_name: 'Nimal', message: 'Wishing you a lifetime of love and laughter.', created_at: new Date().toISOString() }],
     events: [
-      { id: 1, name: 'Poruwa Ceremony', type: 'Poruwa', date: nextSaturdayIso(), time: '09:15', venueName: 'Cinnamon Grand', venueAddress: '77 Galle Rd, Colombo 03', mapLink: 'https://maps.google.com/?q=Cinnamon+Grand+Colombo', sortOrder: 0 },
-      { id: 2, name: 'Reception', type: 'Reception', date: nextSaturdayIso(), time: '19:00', venueName: 'The Grand Ballroom', venueAddress: '', mapLink: '', sortOrder: 1 },
-      { id: 3, name: 'Homecoming', type: 'Homecoming', date: nextSaturdayIso(1), time: '18:00', venueName: 'Family Residence, Kandy', venueAddress: '', mapLink: '', sortOrder: 2 },
+      { id: 1, name: 'Poruwa Ceremony', type: 'Poruwa', date: nextSaturdayIso(), time: '09:15', venueName: 'Cinnamon Grand', venueAddress: '77 Galle Rd, Colombo 03', mapLink: 'https://maps.google.com/?q=Cinnamon+Grand+Colombo', sortOrder: 0, dressCode: 'Traditional' },
+      { id: 2, name: 'Reception', type: 'Reception', date: nextSaturdayIso(), time: '19:00', venueName: 'The Grand Ballroom', venueAddress: '', mapLink: '', sortOrder: 1, dressCode: 'Formal / Black tie' },
+      { id: 3, name: 'Homecoming', type: 'Homecoming', date: nextSaturdayIso(1), time: '18:00', venueName: 'Family Residence, Kandy', venueAddress: '', mapLink: '', sortOrder: 2, dressCode: 'Smart casual' },
+    ],
+    milestones: [
+      { id: 1, title: 'How We Met', date: 'Winter 2019', body: 'A rainy evening in Colombo, one shared umbrella, and a conversation that never really ended.', imageUrl: '/templates/_shared/samples/g2.svg' },
+      { id: 2, title: 'The Proposal', date: 'Spring 2024', body: 'On the cliffs at sunset, with the whole family hiding nearby, the answer was an easy yes.', imageUrl: '/templates/_shared/samples/g3.svg' },
+      { id: 3, title: 'The Big Day', date: nextSaturdayIso(), body: 'Now we invite you to celebrate the beginning of forever with us.', imageUrl: '/templates/_shared/samples/g1.svg' },
     ],
     mode: 'preview',
   };
@@ -178,6 +189,7 @@
     return parseDate(e.date, e.time);
   }
 
+  var currentEvents = [];
   function renderEvents(data) {
     var events = (data.events && data.events.length) ? data.events.slice() : fallbackEvents(data.invitation);
     events.sort(function (a, b) {
@@ -187,12 +199,14 @@
       if (db2) return 1;
       return (a.sortOrder || 0) - (b.sortOrder || 0);
     });
+    currentEvents = events;
+    var coupleNames = ((data.invitation.groomName || '') + ' & ' + (data.invitation.brideName || '')).trim();
 
     // Timeline (shown when there are 2+ events)
     var wrap = document.querySelector('[data-schedule]');
     var section = document.querySelector('[data-schedule-section]');
     if (wrap) {
-      wrap.innerHTML = events.map(function (e) {
+      wrap.innerHTML = events.map(function (e, idx) {
         var when = [formatDate(e.date), e.time ? formatTime(e.time) : ''].filter(Boolean).join(' · ');
         var showType = e.type && e.type !== 'Custom' && String(e.name || '').toLowerCase().indexOf(e.type.toLowerCase()) < 0;
         var typeLabel = showType ? ('<span class="tw-tl-type">' + escapeHtml(e.type) + '</span>') : '';
@@ -202,9 +216,14 @@
           (when ? '<div class="tw-tl-time">' + escapeHtml(when) + '</div>' : '') +
           '<div class="tw-tl-name">' + escapeHtml(e.name) + ' ' + typeLabel + '</div>' +
           (e.venueName ? '<div class="tw-tl-venue">' + escapeHtml(e.venueName) + '</div>' : '') +
-          (e.mapLink ? '<a class="tw-tl-map" href="' + escapeHtml(mapHref(e.mapLink)) + '" target="_blank" rel="noopener">' + t('directions') + '</a>' : '') +
+          (e.dressCode ? '<div class="tw-tl-dress">' + t('dress_code') + ': ' + escapeHtml(e.dressCode) + '</div>' : '') +
+          '<div class="tw-tl-actions">' +
+            (e.mapLink ? '<a class="tw-tl-map" href="' + escapeHtml(mapHref(e.mapLink)) + '" target="_blank" rel="noopener">' + t('directions') + '</a>' : '') +
+            calendarButtonsHtml(idx) +
+          '</div>' +
           '</div></div>';
       }).join('');
+      wireCalendarButtons(coupleNames);
     }
     if (section) section.style.display = events.length >= 2 ? '' : 'none';
 
@@ -219,7 +238,205 @@
     var mapLink = primary.mapLink || (events.find ? (events.find(function (e) { return e.mapLink; }) || {}).mapLink : '') || '';
     wireMap(mapLink);
 
+    injectPrimaryCalendar(0, coupleNames);
     startEventCountdown(events);
+  }
+
+  // ---- Add to Calendar (.ics download + Google Calendar link) ----
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function icsStamp(d) {
+    return d.getUTCFullYear() + pad2(d.getUTCMonth() + 1) + pad2(d.getUTCDate()) + 'T' +
+      pad2(d.getUTCHours()) + pad2(d.getUTCMinutes()) + pad2(d.getUTCSeconds()) + 'Z';
+  }
+  function eventTimes(e) {
+    var start = parseDate(e.date, e.time) || parseDate(e.date, '12:00');
+    if (!start) return null;
+    var end = new Date(start.getTime() + 3 * 3600 * 1000);
+    return { start: start, end: end };
+  }
+  function calTitle(e, coupleNames) {
+    var base = e.name || (e.type && e.type !== 'Custom' ? e.type : 'Wedding');
+    return coupleNames ? (base + ' — ' + coupleNames) : base;
+  }
+  function gcalUrl(e, coupleNames) {
+    var tt = eventTimes(e); if (!tt) return '';
+    var params = 'action=TEMPLATE' +
+      '&text=' + encodeURIComponent(calTitle(e, coupleNames)) +
+      '&dates=' + icsStamp(tt.start) + '/' + icsStamp(tt.end) +
+      (e.venueName ? '&location=' + encodeURIComponent([e.venueName, e.venueAddress].filter(Boolean).join(', ')) : '') +
+      '&details=' + encodeURIComponent('We would love to see you there!');
+    return 'https://calendar.google.com/calendar/render?' + params;
+  }
+  function downloadIcs(e, coupleNames) {
+    var tt = eventTimes(e); if (!tt) return;
+    var lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//TheWed//Invitation//EN', 'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      'UID:' + Math.random().toString(36).slice(2) + '@thewed',
+      'DTSTAMP:' + icsStamp(new Date()),
+      'DTSTART:' + icsStamp(tt.start),
+      'DTEND:' + icsStamp(tt.end),
+      'SUMMARY:' + calTitle(e, coupleNames).replace(/,/g, '\\,'),
+      e.venueName ? ('LOCATION:' + [e.venueName, e.venueAddress].filter(Boolean).join(', ').replace(/,/g, '\\,')) : '',
+      'DESCRIPTION:We would love to see you there!',
+      'END:VEVENT', 'END:VCALENDAR',
+    ].filter(Boolean);
+    var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (e.name || 'event').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.ics';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  }
+  function calendarButtonsHtml(idx) {
+    return '<span class="tw-cal">' +
+      '<a class="tw-cal-btn tw-cal-g" data-gcal="' + idx + '" target="_blank" rel="noopener">' + t('add_calendar') + '</a>' +
+      '<a class="tw-cal-btn tw-cal-i" href="#" data-ics="' + idx + '">.ics</a>' +
+      '</span>';
+  }
+  function wireCalendarButtons(coupleNames) {
+    document.querySelectorAll('[data-gcal]').forEach(function (a) {
+      var e = currentEvents[Number(a.getAttribute('data-gcal'))];
+      if (e) a.setAttribute('href', gcalUrl(e, coupleNames));
+    });
+    document.querySelectorAll('[data-ics]').forEach(function (a) {
+      if (a._wired) return; a._wired = true;
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var e = currentEvents[Number(a.getAttribute('data-ics'))];
+        if (e) downloadIcs(e, coupleNames);
+      });
+    });
+  }
+  // Put an "Add to Calendar" control near the primary event's Get Directions.
+  function injectPrimaryCalendar(idx, coupleNames) {
+    var host = document.querySelector('[data-map-section]') || document.querySelector('[data-directions]');
+    if (!host || !currentEvents.length) return;
+    var container = host.matches('[data-map-section]') ? host : host.parentElement;
+    var existing = container.querySelector('.tw-primary-cal');
+    if (existing) existing.remove();
+    var span = document.createElement('div');
+    span.className = 'tw-primary-cal';
+    span.innerHTML = calendarButtonsHtml(idx);
+    container.appendChild(span);
+    wireCalendarButtons(coupleNames);
+  }
+
+  // ---- Our Story milestone timeline (optional) ----
+  function renderMilestones(data) {
+    var list = document.querySelector('[data-story-timeline]');
+    var section = document.querySelector('[data-story-timeline-section]');
+    var ms = (data.milestones || []);
+    if (list) {
+      list.innerHTML = ms.map(function (m) {
+        return '<div class="tw-ms">' +
+          (m.imageUrl ? '<div class="tw-ms-img"><img src="' + escapeHtml(m.imageUrl) + '" alt="" loading="lazy"/></div>' : '') +
+          '<div class="tw-ms-body">' +
+            (m.date ? '<div class="tw-ms-date">' + escapeHtml(m.date) + '</div>' : '') +
+            '<div class="tw-ms-title">' + escapeHtml(m.title) + '</div>' +
+            (m.body ? '<div class="tw-ms-text">' + escapeHtml(m.body) + '</div>' : '') +
+          '</div></div>';
+      }).join('');
+      // gentle staggered fade-in
+      var items = list.querySelectorAll('.tw-ms');
+      items.forEach(function (el, i) {
+        el.style.opacity = 0; el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity .7s ease, transform .7s ease';
+        setTimeout(function () { el.style.opacity = 1; el.style.transform = 'none'; }, 120 + i * 140);
+      });
+    }
+    if (section) section.style.display = ms.length ? '' : 'none';
+  }
+
+  // ---- Shared component styles (calendar buttons, dress code, milestones) ----
+  function injectSharedStyles() {
+    if (document.getElementById('tw-shared-styles')) return;
+    var css = '' +
+      '.tw-tl-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}' +
+      '.tw-tl-dress{font-size:13px;opacity:.85;margin-top:3px}' +
+      '.tw-cal{display:inline-flex;gap:6px;align-items:center}' +
+      '.tw-cal-btn{display:inline-block;font-size:12px;letter-spacing:.5px;text-decoration:none;border:1px solid currentColor;border-radius:20px;padding:5px 12px;opacity:.8;cursor:pointer}' +
+      '.tw-cal-btn:hover{opacity:1}' +
+      '.tw-cal-i{opacity:.6}' +
+      '.tw-primary-cal{margin-top:12px;display:flex;justify-content:center}' +
+      '.tw-ms{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;max-width:640px;margin:0 auto 22px;text-align:left}' +
+      '.tw-ms-img{width:120px;height:120px;border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.12)}' +
+      '.tw-ms-img img{width:100%;height:100%;object-fit:cover}' +
+      '.tw-ms-date{font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:2px}' +
+      '.tw-ms-title{font-family:Georgia,serif;font-size:24px;margin-bottom:4px}' +
+      '.tw-ms-text{font-size:15px;line-height:1.6;opacity:.9}' +
+      '@media(max-width:560px){.tw-ms{grid-template-columns:1fr;text-align:center;gap:10px}.tw-ms-img{margin:0 auto}}';
+    var st = document.createElement('style');
+    st.id = 'tw-shared-styles';
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+
+  // ---- Floating "RSVP" quick action (scrolls to the form) ----
+  function injectRsvpFab() {
+    if (!document.querySelector('[data-thewed-rsvp]')) return;
+    if (document.querySelector('.tw-rsvp-fab')) return;
+    var b = document.createElement('button');
+    b.className = 'tw-rsvp-fab';
+    b.type = 'button';
+    b.textContent = t('rsvp_cta');
+    b.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:9997;background:#b08d57;color:#fff;border:none;border-radius:30px;padding:12px 20px;font-size:14px;letter-spacing:1px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.25)';
+    b.addEventListener('click', function () {
+      var f = document.querySelector('[data-thewed-rsvp]');
+      if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    document.body.appendChild(b);
+  }
+
+  // ---- Confetti burst (celebratory, lightweight) ----
+  function launchConfetti() {
+    var canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:10000';
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+    var colors = ['#b08d57', '#e6c976', '#c98b9b', '#8a9a7b', '#ffffff', '#6e1420'];
+    var pieces = [];
+    for (var i = 0; i < 140; i++) {
+      pieces.push({ x: canvas.width / 2, y: canvas.height / 3,
+        vx: (Math.random() - 0.5) * 12, vy: Math.random() * -14 - 4,
+        size: Math.random() * 8 + 4, color: colors[i % colors.length],
+        rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4 });
+    }
+    var start = Date.now();
+    (function frame() {
+      var elapsed = Date.now() - start;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(function (p) {
+        p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+      });
+      if (elapsed < 2600) requestAnimationFrame(frame);
+      else if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    })();
+  }
+
+  // Celebratory success popup for a joyful RSVP.
+  function showRsvpCelebration() {
+    var existing = document.querySelector('.tw-celebrate');
+    if (existing) existing.remove();
+    var wrap = document.createElement('div');
+    wrap.className = 'tw-celebrate';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(20,15,10,0.35);opacity:0;transition:opacity .3s ease';
+    wrap.innerHTML = '<div style="background:#fffdf9;border-radius:16px;padding:30px 34px;max-width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);transform:scale(.9);transition:transform .3s ease">' +
+      '<div style="font-size:44px">💐</div>' +
+      '<div style="font-family:Georgia,serif;font-size:26px;color:#3b342c;margin:8px 0 6px">' + t('thank_you') + '</div>' +
+      '<div style="color:#8a8177;font-size:15px">Your RSVP has been received. We can’t wait to celebrate with you!</div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    var card = wrap.firstChild;
+    requestAnimationFrame(function () { wrap.style.opacity = 1; card.style.transform = 'scale(1)'; });
+    function close() { wrap.style.opacity = 0; setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 300); }
+    wrap.addEventListener('click', close);
+    setTimeout(close, 4200);
   }
 
   function fallbackEvents(inv) {
@@ -438,6 +655,7 @@
         guest_name: (form.querySelector('[name=guest_name]') || {}).value || '',
         attending: (form.querySelector('[name=attending]') || {}).value !== 'no',
         guest_count: (form.querySelector('[name=guest_count]') || {}).value || 1,
+        children_count: (form.querySelector('[name=children_count]') || {}).value || 0,
         message: (form.querySelector('[name=message]') || {}).value || '',
       };
       if (!fd.guest_name.trim()) { if (status) status.textContent = 'Please enter your name.'; return; }
@@ -448,6 +666,7 @@
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (!res.ok) throw new Error(res.j.error || 'Could not submit');
+          if (fd.attending) { showRsvpCelebration(); launchConfetti(); }
           if (status) status.textContent = fd.attending ? 'Thank you! We can’t wait to celebrate with you.' : 'Thank you for letting us know. You’ll be missed!';
           form.reset();
         }).catch(function (err) { if (status) status.textContent = err.message; })
@@ -482,7 +701,19 @@
   // ---- Language switcher ----
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
-      el.textContent = t(el.getAttribute('data-i18n'));
+      var val = t(el.getAttribute('data-i18n'));
+      if (el.children && el.children.length) {
+        // Label wraps controls (e.g. <label>Adults<input></label>): translate
+        // only the leading text node so inputs/selects are preserved.
+        var done = false;
+        for (var i = 0; i < el.childNodes.length; i += 1) {
+          var n = el.childNodes[i];
+          if (n.nodeType === 3 && n.textContent.trim()) { n.textContent = val; done = true; break; }
+        }
+        if (!done) el.insertBefore(document.createTextNode(val), el.firstChild);
+      } else {
+        el.textContent = val;
+      }
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(function (el) {
       el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
@@ -555,6 +786,8 @@
         try { render(data); } catch (e) { console.error('render error', e); }
         // Shared behaviors
         renderEvents(data);
+        renderMilestones(data);
+        injectRsvpFab();
         wireGalleryLightbox();
         wireMusic(data.invitation);
         currentWishes = data.wishes || currentWishes;
@@ -567,6 +800,7 @@
         applyI18n();
         if (data.invitation.slug && data.mode === 'live') loadWishes(data.invitation.slug);
       }
+      injectSharedStyles();
       initOpener();
       global.addEventListener('message', function (e) {
         if (e && e.data && e.data.type === 'thewed:data') run(e.data.data);

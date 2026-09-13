@@ -58,6 +58,12 @@
     <div class="tw-timeline" data-schedule></div>
   </section>
 
+  <!-- OUR STORY TIMELINE (optional) -->
+  <section class="story-timeline" data-story-timeline-section style="display:none">
+    <h2 class="section-title" data-i18n="our_story">Our Story</h2>
+    <div data-story-timeline></div>
+  </section>
+
   <!-- STORY -->
   <section class="story reveal" data-story-section>
     <h2 class="section-title">Our Story</h2>
@@ -97,7 +103,10 @@
           <option value="no" data-i18n="no">Regretfully declines</option>
         </select>
       </label>
-      <label data-i18n="guests">Number of guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      <div style="display:flex;gap:12px;">
+        <label style="flex:1;" data-i18n="adults">Adults<input type="number" name="guest_count" min="0" value="1" /></label>
+        <label style="flex:1;" data-i18n="children">Children<input type="number" name="children_count" min="0" value="0" /></label>
+      </div>
       <label data-i18n="message">A note for the couple<textarea name="message" rows="3"></textarea></label>
       <button type="submit" data-i18n="send">Send RSVP</button>
       <p class="rsvp-status" data-rsvp-status></p>

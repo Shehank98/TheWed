@@ -57,6 +57,13 @@
     <div class="tw-timeline" data-schedule></div>
   </section>
 
+  <section class="details-section" data-story-timeline-section style="display:none">
+    <div class="details-inner">
+      <h2 data-i18n="our_story">Our Story</h2>
+      <div data-story-timeline></div>
+    </div>
+  </section>
+
   <section class="story-section" data-story-section>
     <div class="story-media" data-parallax data-story-media></div>
     <div class="story-copy">
@@ -88,7 +95,10 @@
     <form data-thewed-rsvp class="rsvp" data-reveal>
       <label data-i18n="name">Full name<input type="text" name="guest_name" required /></label>
       <label data-i18n="attend_q">Attending<select name="attending"><option value="yes" data-i18n="yes">Yes — count me in</option><option value="no" data-i18n="no">No — with regret</option></select></label>
-      <label data-i18n="guests">Guests<input type="number" name="guest_count" min="0" value="1" /></label>
+      <div style="display:flex;gap:12px;">
+        <label style="flex:1;" data-i18n="adults">Adults<input type="number" name="guest_count" min="0" value="1" /></label>
+        <label style="flex:1;" data-i18n="children">Children<input type="number" name="children_count" min="0" value="0" /></label>
+      </div>
       <label data-i18n="message">Message<textarea name="message" rows="3"></textarea></label>
       <button type="submit" data-i18n="send">Confirm attendance</button>
       <p class="status" data-rsvp-status></p>

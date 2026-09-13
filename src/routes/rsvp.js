@@ -13,7 +13,7 @@ router.post('/:slug', async (req, res, next) => {
       return res.status(404).json({ error: 'This invitation is not accepting RSVPs' });
     }
 
-    const { guest_name, attending, guest_count, message } = req.body || {};
+    const { guest_name, attending, guest_count, children_count, message } = req.body || {};
 
     if (!guest_name || !String(guest_name).trim()) {
       return res.status(400).json({ error: 'guest_name is required' });
@@ -24,7 +24,11 @@ router.post('/:slug', async (req, res, next) => {
 
     let count = Number(guest_count);
     if (!Number.isFinite(count) || count < 0) count = isAttending ? 1 : 0;
-    count = Math.min(Math.round(count), 50); // sane upper bound
+    count = Math.min(Math.round(count), 50); // sane upper bound (adults)
+
+    let children = Number(children_count);
+    if (!Number.isFinite(children) || children < 0) children = 0;
+    children = Math.min(Math.round(children), 50);
 
     const [rsvp] = await db('rsvps')
       .insert({
@@ -32,6 +36,7 @@ router.post('/:slug', async (req, res, next) => {
         guest_name: String(guest_name).trim().slice(0, 200),
         attending: isAttending,
         guest_count: count,
+        children_count: children,
         message: message ? String(message).trim().slice(0, 2000) : null,
       })
       .returning('*');

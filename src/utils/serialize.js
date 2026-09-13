@@ -118,6 +118,7 @@ async function loadEvents(invitation, restrictEventIds = null) {
       venueName: r.venue_name || '',
       venueAddress: r.venue_address || '',
       mapLink: r.map_link || '',
+      dressCode: r.dress_code || '',
       sortOrder: r.sort_order || 0,
       isPrivate: Boolean(r.is_private),
       language: r.language || '',
@@ -172,12 +173,31 @@ function labelForType(type) {
   return EVENT_TYPES.includes(type) ? type : 'Event';
 }
 
+/**
+ * Optional "Our Story" milestone timeline. Empty array if the couple hasn't
+ * added any (the section then stays hidden).
+ */
+async function loadMilestones(invitationId) {
+  const rows = await db('story_milestones')
+    .where({ invitation_id: invitationId })
+    .orderBy([{ column: 'sort_order', order: 'asc' }, { column: 'id', order: 'asc' }]);
+  return rows.map((m) => ({
+    id: m.id,
+    title: m.title || '',
+    date: m.milestone_date || '',
+    body: m.body || '',
+    imageUrl: m.image_url || '',
+    sortOrder: m.sort_order || 0,
+  }));
+}
+
 module.exports = {
   renderPayload,
   groupImages,
   loadImages,
   normalizeSchedule,
   loadEvents,
+  loadMilestones,
   EVENT_TYPES,
   toDateStr,
 };

@@ -6,7 +6,7 @@ const db = require('../db');
 const config = require('../config');
 const drive = require('../utils/drive');
 const { generateUniqueSlug, generateGuestToken } = require('../utils/codes');
-const { renderPayload, loadImages, normalizeSchedule, loadEvents, EVENT_TYPES } = require('../utils/serialize');
+const { renderPayload, loadImages, normalizeSchedule, loadEvents, loadMilestones, EVENT_TYPES } = require('../utils/serialize');
 
 const router = express.Router();
 
@@ -75,6 +75,7 @@ router.get('/public/:slug', async (req, res, next) => {
     }
     payload.events = allEvents.filter((e) => !e.isPrivate || allowedPrivate.has(Number(e.id)));
     if (guest) payload.guestName = guest.guest_name;
+    payload.milestones = await loadMilestones(invitation.id);
 
     return res.json(payload);
   } catch (err) {
@@ -122,6 +123,7 @@ router.get('/token/:token', async (req, res, next) => {
     payload.publicUrl = ctx.invitation.slug ? `${config.baseUrl}/i/${ctx.invitation.slug}` : null;
     payload.archiveAt = ctx.invitation.archive_at;
     payload.events = await loadEvents(ctx.invitation);
+    payload.milestones = await loadMilestones(ctx.invitation.id);
     return res.json(payload);
   } catch (err) {
     return next(err);
@@ -182,6 +184,7 @@ router.put('/token/:token', async (req, res, next) => {
     const images = await loadImages(ctx.invitation.id);
     const out = renderPayload(refreshed, ctx.template, images);
     out.events = await loadEvents(refreshed);
+    out.milestones = await loadMilestones(refreshed.id);
     return res.json(out);
   } catch (err) {
     return next(err);
@@ -202,6 +205,7 @@ function cleanEvent(e) {
     venue_name: e.venue_name ? String(e.venue_name).slice(0, 300) : null,
     venue_address: e.venue_address ? String(e.venue_address).slice(0, 600) : null,
     map_link: e.map_link ? String(e.map_link).slice(0, 4000) : null,
+    dress_code: e.dress_code ? String(e.dress_code).slice(0, 200) : null,
     sort_order: Number.isFinite(Number(e.sort_order)) ? Number(e.sort_order) : 0,
     is_private: Boolean(e.is_private),
   };
@@ -419,7 +423,8 @@ router.get('/token/:token/rsvps', async (req, res, next) => {
 
     const attending = rsvps.filter((r) => r.attending);
     const notAttending = rsvps.filter((r) => !r.attending);
-    const totalGuests = attending.reduce((sum, r) => sum + (Number(r.guest_count) || 0), 0);
+    const totalAdults = attending.reduce((sum, r) => sum + (Number(r.guest_count) || 0), 0);
+    const totalChildren = attending.reduce((sum, r) => sum + (Number(r.children_count) || 0), 0);
 
     return res.json({
       rsvps,
@@ -427,7 +432,9 @@ router.get('/token/:token/rsvps', async (req, res, next) => {
         totalResponses: rsvps.length,
         attendingResponses: attending.length,
         notAttendingResponses: notAttending.length,
-        totalGuests,
+        totalGuests: totalAdults + totalChildren,
+        totalAdults,
+        totalChildren,
       },
     });
   } catch (err) {
@@ -453,7 +460,8 @@ router.get('/token/:token/rsvps/export', async (req, res, next) => {
     sheet.columns = [
       { header: 'Guest Name', key: 'guest_name', width: 28 },
       { header: 'Attending', key: 'attending', width: 12 },
-      { header: 'Guest Count', key: 'guest_count', width: 14 },
+      { header: 'Adults', key: 'guest_count', width: 10 },
+      { header: 'Children', key: 'children_count', width: 10 },
       { header: 'Message', key: 'message', width: 50 },
       { header: 'Submitted At', key: 'submitted_at', width: 24 },
     ];
@@ -464,15 +472,16 @@ router.get('/token/:token/rsvps/export', async (req, res, next) => {
         guest_name: r.guest_name,
         attending: r.attending ? 'Yes' : 'No',
         guest_count: r.guest_count,
+        children_count: r.children_count || 0,
         message: r.message || '',
         submitted_at: new Date(r.submitted_at).toISOString(),
       });
     });
 
     const attending = rsvps.filter((r) => r.attending);
-    const totalGuests = attending.reduce((sum, r) => sum + (Number(r.guest_count) || 0), 0);
+    const totalGuests = attending.reduce((sum, r) => sum + (Number(r.guest_count) || 0) + (Number(r.children_count) || 0), 0);
     sheet.addRow({});
-    const totalRow = sheet.addRow({ guest_name: 'TOTAL ATTENDING GUESTS', guest_count: totalGuests });
+    const totalRow = sheet.addRow({ guest_name: 'TOTAL ATTENDING (incl. children)', guest_count: totalGuests });
     totalRow.font = { bold: true };
 
     const coupleName =
@@ -801,6 +810,70 @@ router.get('/token/:token/qr', async (req, res, next) => {
       res.setHeader('Content-Disposition', `attachment; filename="qr-${ctx.invitation.slug}.png"`);
     }
     return res.end(png);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ===========================================================================
+// Our Story milestones (optional timeline) — sync by id, keyed by magic link
+// ===========================================================================
+
+/** GET /api/invitations/token/:token/milestones */
+router.get('/token/:token/milestones', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const rows = await db('story_milestones')
+      .where({ invitation_id: ctx.invitation.id })
+      .orderByRaw('sort_order asc, id asc');
+    return res.json({ milestones: rows });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/** PUT /api/invitations/token/:token/milestones — sync the full list. */
+router.put('/token/:token/milestones', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const incoming = Array.isArray(req.body.milestones) ? req.body.milestones : [];
+
+    const existing = await db('story_milestones').where({ invitation_id: ctx.invitation.id });
+    const existingIds = new Set(existing.map((e) => e.id));
+    const keptIds = [];
+
+    const clean = (m, i) => ({
+      title: String(m.title || '').slice(0, 200),
+      milestone_date: m.milestone_date ? String(m.milestone_date).slice(0, 100) : null,
+      body: m.body ? String(m.body).slice(0, 2000) : null,
+      image_url: m.image_url ? String(m.image_url).slice(0, 2000) : null,
+      sort_order: m.sort_order != null ? Number(m.sort_order) : i,
+    });
+
+    await db.transaction(async (trx) => {
+      for (let i = 0; i < incoming.length; i += 1) {
+        const data = clean(incoming[i], i);
+        const id = Number(incoming[i].id);
+        if (id && existingIds.has(id)) {
+          await trx('story_milestones').where({ id, invitation_id: ctx.invitation.id }).update(data);
+          keptIds.push(id);
+        } else {
+          const [created] = await trx('story_milestones')
+            .insert({ ...data, invitation_id: ctx.invitation.id })
+            .returning('id');
+          keptIds.push(typeof created === 'object' ? created.id : created);
+        }
+      }
+      const toDelete = [...existingIds].filter((eid) => !keptIds.includes(eid));
+      if (toDelete.length) await trx('story_milestones').whereIn('id', toDelete).del();
+    });
+
+    const rows = await db('story_milestones')
+      .where({ invitation_id: ctx.invitation.id })
+      .orderByRaw('sort_order asc, id asc');
+    return res.json({ ok: true, milestones: rows });
   } catch (err) {
     return next(err);
   }
