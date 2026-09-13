@@ -7,10 +7,9 @@
  *   - countdown with a "Today's the day!" swap on the wedding day,
  *   - event schedule timeline, venue map / Get Directions,
  *   - photo gallery lightbox, optional background music (muted autoplay + toggle),
- *   - guestbook (wishes wall) submit + list, RSVP (incl. meal preference) + a
- *     live "X guests confirmed" counter,
- *   - per-guest personalization ("Dear <name>" from ?to=), WhatsApp share,
- *   - a Sinhala / Tamil / English label switcher (couple's own text is untouched).
+ *   - guestbook (wishes wall) submit + list, a simple RSVP (name + accept/decline)
+ *     with a "X guests confirmed" counter,
+ *   - per-guest personalization ("Dear <name>" from ?to=), WhatsApp share.
  *
  * Templates supply styled containers with data-* hooks; the runtime fills them.
  *
@@ -26,45 +25,22 @@
  *   mode: 'live' | 'preview'
  */
 (function (global) {
-  // ---- i18n dictionary (static UI labels only) ----
+  // ---- UI labels (English only) ----
   var I18N = {
     en: {
       greeting: 'Dear', directions: 'Get Directions', schedule: 'Schedule', today: "Today's the day!",
       days: 'Days', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds',
-      rsvp: 'RSVP', name: 'Your name', attend_q: 'Will you attend?', yes: 'Joyfully accepts',
-      no: 'Regretfully declines', guests: 'Number of guests', meal: 'Meal preference', message: 'Message',
-      send: 'Send', confirmed: 'guests confirmed', guestbook: 'Guestbook', wishes: 'Wishes & Blessings',
+      rsvp: 'RSVP', name: 'Your name', accept: 'Joyfully Accept', decline: 'Decline',
+      confirmed: 'guests confirmed', guestbook: 'Guestbook', wishes: 'Wishes & Blessings',
       wish_name: 'Your name', wish_msg: 'Your wish for the couple', wish_send: 'Post wish',
       share: 'Share on WhatsApp', mute: 'Music: off', unmute: 'Music: on', no_wishes: 'Be the first to leave a wish.',
-      dress_code: 'Dress code', add_calendar: 'Add to Calendar', rsvp_cta: 'RSVP', adults: 'Adults', children: 'Children',
+      dress_code: 'Dress code', add_calendar: 'Add to Calendar', rsvp_cta: 'RSVP',
       our_story: 'Our Story', thank_you: 'Thank you!',
-    },
-    si: {
-      greeting: 'ආදරණීය', directions: 'දිශාව සොයන්න', schedule: 'වැඩසටහන', today: 'අද තමයි ඒ දවස!',
-      days: 'දින', hours: 'පැය', minutes: 'මිනිත්තු', seconds: 'තත්පර',
-      rsvp: 'පැමිණීම දන්වන්න', name: 'ඔබේ නම', attend_q: 'ඔබ සහභාගී වේද?', yes: 'සතුටින් පැමිණේ',
-      no: 'කනගාටුවෙන් නොපැමිණේ', guests: 'අමුත්තන් ගණන', meal: 'ආහාර තේරීම', message: 'පණිවිඩය',
-      send: 'යවන්න', confirmed: 'අමුත්තන් තහවුරු කර ඇත', guestbook: 'සුබ පැතුම් පොත', wishes: 'සුබ පැතුම්',
-      wish_name: 'ඔබේ නම', wish_msg: 'යුවළ සඳහා ඔබේ සුබ පැතුම', wish_send: 'පළ කරන්න',
-      share: 'WhatsApp හරහා බෙදන්න', mute: 'සංගීතය: නැත', unmute: 'සංගීතය: ඇත', no_wishes: 'පළමු සුබ පැතුම තබන්න.',
-      dress_code: 'ඇඳුම් රටාව', add_calendar: 'දින දර්ශනයට එක් කරන්න', rsvp_cta: 'පැමිණීම දන්වන්න', adults: 'වැඩිහිටියන්', children: 'ළමයි',
-      our_story: 'අපගේ කතාව', thank_you: 'ස්තුතියි!',
-    },
-    ta: {
-      greeting: 'அன்பார்ந்த', directions: 'வழி காட்டு', schedule: 'நிகழ்ச்சி நிரல்', today: 'இன்று தான் அந்த நாள்!',
-      days: 'நாட்கள்', hours: 'மணி', minutes: 'நிமிடம்', seconds: 'விநாடி',
-      rsvp: 'வருகையை உறுதிசெய்', name: 'உங்கள் பெயர்', attend_q: 'நீங்கள் வருகிறீர்களா?', yes: 'மகிழ்ச்சியுடன் வருகிறேன்',
-      no: 'வர இயலாது', guests: 'விருந்தினர் எண்ணிக்கை', meal: 'உணவு விருப்பம்', message: 'செய்தி',
-      send: 'அனுப்பு', confirmed: 'விருந்தினர்கள் உறுதி', guestbook: 'வாழ்த்து புத்தகம்', wishes: 'வாழ்த்துக்கள்',
-      wish_name: 'உங்கள் பெயர்', wish_msg: 'தம்பதியருக்கு உங்கள் வாழ்த்து', wish_send: 'வாழ்த்து இடு',
-      share: 'WhatsApp இல் பகிர்', mute: 'இசை: இல்லை', unmute: 'இசை: ஆம்', no_wishes: 'முதல் வாழ்த்தை இடுங்கள்.',
-      dress_code: 'உடை நடை', add_calendar: 'நாட்காட்டியில் சேர்', rsvp_cta: 'வருகையை உறுதிசெய்', adults: 'பெரியவர்கள்', children: 'குழந்தைகள்',
-      our_story: 'எங்கள் கதை', thank_you: 'நன்றி!',
     },
   };
   var currentLang = 'en';
 
-  function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key; }
+  function t(key) { return I18N.en[key] || key; }
 
   var DEMO = {
     template: { folderKey: '' },
@@ -363,11 +339,18 @@
       'img,svg,video,iframe{max-width:100%}' +
       '[data-thewed-rsvp] input,[data-thewed-rsvp] select,[data-thewed-rsvp] textarea,' +
       '[data-wish-form] input,[data-wish-form] textarea{max-width:100%;box-sizing:border-box}' +
-      // Let RSVP form flex items (e.g. the Adults/Children row) shrink instead
-      // of overflowing: flex items default to min-width:auto and won't shrink
-      // below a number input's intrinsic width.
       '[data-thewed-rsvp] label,[data-thewed-rsvp] input,[data-thewed-rsvp] select{min-width:0}' +
-      '[data-thewed-rsvp] input[type=number]{width:100%}' +
+      // Simple RSVP: full-width name field + two accept/decline buttons.
+      '[data-thewed-rsvp] input[name=guest_name]{width:100%;box-sizing:border-box;margin-bottom:14px}' +
+      '.tw-rsvp-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:2px}' +
+      '.tw-rsvp-actions button{flex:1 1 150px;width:auto;cursor:pointer}' +
+      '.tw-rsvp-actions .tw-rsvp-yes{animation:twYesPulse 2.4s ease-in-out infinite;transition:transform .12s ease}' +
+      '.tw-rsvp-actions .tw-rsvp-yes:hover{filter:brightness(1.05)}' +
+      '.tw-rsvp-actions .tw-rsvp-yes:active{transform:scale(.95)}' +
+      '.tw-rsvp-actions .tw-rsvp-no{background:transparent;border:1px solid currentColor;color:inherit;box-shadow:none;opacity:.6;transition:opacity .15s ease}' +
+      '.tw-rsvp-actions .tw-rsvp-no:hover{opacity:1}' +
+      '@keyframes twYesPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}' +
+      '@media(prefers-reduced-motion:reduce){.tw-rsvp-actions .tw-rsvp-yes{animation:none}}' +
       '.tw-tl-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}' +
       '.tw-tl-dress{font-size:13px;opacity:.85;margin-top:3px}' +
       '.tw-cal{display:inline-flex;gap:6px;align-items:center}' +
@@ -666,16 +649,19 @@
       var slug = (TheWed.data && TheWed.data.invitation && TheWed.data.invitation.slug) || '';
       var isLive = TheWed.data && TheWed.data.mode === 'live' && slug;
       if (!isLive) { if (status) status.textContent = 'RSVP is enabled once your invitation is published.'; return; }
+      // Which button was pressed decides accept vs decline.
+      var submitter = e.submitter || form.querySelector('button[type=submit]');
+      var declined = submitter && submitter.getAttribute('data-attending') === 'no';
       var fd = {
         guest_name: (form.querySelector('[name=guest_name]') || {}).value || '',
-        attending: (form.querySelector('[name=attending]') || {}).value !== 'no',
-        guest_count: (form.querySelector('[name=guest_count]') || {}).value || 1,
-        children_count: (form.querySelector('[name=children_count]') || {}).value || 0,
-        message: (form.querySelector('[name=message]') || {}).value || '',
+        attending: !declined,
+        guest_count: 1,
+        children_count: 0,
+        message: '',
       };
       if (!fd.guest_name.trim()) { if (status) status.textContent = 'Please enter your name.'; return; }
-      var btn = form.querySelector('button[type=submit]');
-      if (btn) btn.disabled = true;
+      var btns = form.querySelectorAll('button[type=submit]');
+      btns.forEach(function (b) { b.disabled = true; });
       fetch('/api/rsvp/' + encodeURIComponent(slug), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fd),
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -685,7 +671,7 @@
           if (status) status.textContent = fd.attending ? 'Thank you! We can’t wait to celebrate with you.' : 'Thank you for letting us know. You’ll be missed!';
           form.reset();
         }).catch(function (err) { if (status) status.textContent = err.message; })
-        .finally(function () { if (btn) btn.disabled = false; });
+        .finally(function () { btns.forEach(function (b) { b.disabled = false; }); });
     });
   }
 
@@ -713,7 +699,7 @@
     btn.setAttribute('rel', 'noopener');
   }
 
-  // ---- Language switcher ----
+  // ---- Static UI labels (English) ----
   function applyI18n() {
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       var val = t(el.getAttribute('data-i18n'));
@@ -734,35 +720,6 @@
       el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
     });
   }
-  function injectLangSwitch() {
-    var existing = document.querySelector('[data-lang-switch]');
-    var box = existing;
-    if (!box) {
-      box = document.createElement('div');
-      box.setAttribute('data-lang-switch', '');
-      box.className = 'tw-lang-switch';
-      box.style.cssText = 'position:fixed;top:12px;right:12px;z-index:9998;display:flex;gap:4px;background:rgba(0,0,0,0.5);padding:4px;border-radius:999px';
-      document.body.appendChild(box);
-    }
-    box.innerHTML = ['en', 'si', 'ta'].map(function (l) {
-      var labels = { en: 'EN', si: 'සි', ta: 'த' };
-      return '<button data-lang="' + l + '" style="border:none;background:none;color:#fff;cursor:pointer;padding:4px 9px;border-radius:999px;font-size:13px' +
-        (l === currentLang ? ';background:#fff;color:#111' : '') + '">' + labels[l] + '</button>';
-    }).join('');
-    box.querySelectorAll('[data-lang]').forEach(function (b) {
-      b.onclick = function () { setLang(b.getAttribute('data-lang')); };
-    });
-  }
-  function setLang(lang) {
-    currentLang = I18N[lang] ? lang : 'en';
-    applyI18n();
-    injectLangSwitch();
-    // Re-run light bits whose text depends on language.
-    if (TheWed.data) { renderGreeting(TheWed.data); renderWishes((TheWed.data.wishes) || currentWishes); }
-    var todayEl = document.querySelector('[data-today]');
-    if (todayEl && todayEl.style.display !== 'none') todayEl.textContent = t('today');
-  }
-
   var currentWishes = [];
 
   // ---- Intro opener (envelope / curtain / bloom / doors …) ----
@@ -797,7 +754,7 @@
     init: function (render) {
       function run(data) {
         TheWed.data = data;
-        currentLang = (data.invitation && I18N[data.invitation.languageDefault]) ? data.invitation.languageDefault : 'en';
+        currentLang = 'en';
         try { render(data); } catch (e) { console.error('render error', e); }
         // Shared behaviors
         renderEvents(data);
@@ -811,7 +768,6 @@
         renderGreeting(data);
         wireShare(data);
         wireRsvp(data);
-        injectLangSwitch();
         applyI18n();
         if (data.invitation.slug && data.mode === 'live') loadWishes(data.invitation.slug);
       }

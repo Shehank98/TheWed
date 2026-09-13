@@ -146,14 +146,23 @@
       ['Photo gallery', 'Upload your favourite photos into a lazy-loaded gallery with a full-screen lightbox.'],
       ['Background music', 'Set the mood with a song that plays muted, with a tap-to-unmute button.'],
       ['Guestbook', 'Guests leave wishes and blessings on a live wall that you can moderate.'],
-      ['RSVP tracking', 'Guests enter their name and whether they can come; every reply shows in your dashboard and exports to Excel.'],
+      ['One-tap RSVP', 'Guests just enter their name and tap Joyfully Accept or Decline; every reply lands in your dashboard and exports to Excel.'],
       ['Personalized links', 'Send each guest a link that greets them by name, such as “Dear Nimal”.'],
       ['Share and QR', 'One-tap WhatsApp sharing and a downloadable QR code for your invitation.'],
-      ['Multi-language', 'A Sinhala, Tamil and English switcher for guests, with your own text untouched.'],
     ];
     const fg = document.getElementById('feature-grid');
-    fg.innerHTML = FEATURES.map((f) => `
-      <div class="feature"><span class="ico" aria-hidden="true"></span><h3>${f[0]}</h3><p>${f[1]}</p></div>`).join('');
+    fg.innerHTML = FEATURES.map((f, i) => `
+      <div class="feature" data-reveal style="transition-delay:${(i % 3) * 90}ms"><span class="ico" aria-hidden="true"></span><h3>${f[0]}</h3><p>${f[1]}</p></div>`).join('');
+
+    // Staggered reveal-on-scroll for the feature cards.
+    (function () {
+      const cards = document.querySelectorAll('#feature-grid .feature');
+      if (!('IntersectionObserver' in window)) { cards.forEach((c) => c.classList.add('in')); return; }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+      }, { threshold: 0.15 });
+      cards.forEach((c) => io.observe(c));
+    })();
 
     const grid = document.getElementById('template-grid');
     const modal = document.getElementById('order-modal');

@@ -96,19 +96,11 @@
   <section class="rsvp reveal">
     <h2 class="section-title" data-i18n="rsvp">RSVP</h2>
     <form data-thewed-rsvp class="rsvp-form">
-      <label data-i18n="name">Your name<input type="text" name="guest_name" required /></label>
-      <label data-i18n="attend_q">Will you attend?
-        <select name="attending">
-          <option value="yes" data-i18n="yes">Joyfully accepts</option>
-          <option value="no" data-i18n="no">Regretfully declines</option>
-        </select>
-      </label>
-      <div style="display:flex;gap:12px;">
-        <label style="flex:1;" data-i18n="adults">Adults<input type="number" name="guest_count" min="0" value="1" /></label>
-        <label style="flex:1;" data-i18n="children">Children<input type="number" name="children_count" min="0" value="0" /></label>
+      <input type="text" name="guest_name" placeholder="Your name" required />
+      <div class="tw-rsvp-actions">
+        <button type="submit" data-attending="yes" class="tw-rsvp-yes" data-i18n="accept">Joyfully Accept</button>
+        <button type="submit" data-attending="no" class="tw-rsvp-no" data-i18n="decline">Decline</button>
       </div>
-      <label data-i18n="message">A note for the couple<textarea name="message" rows="3"></textarea></label>
-      <button type="submit" data-i18n="send">Send RSVP</button>
       <p class="rsvp-status" data-rsvp-status></p>
     </form>
     <p class="rsvp-phone" data-rsvp-phone></p>

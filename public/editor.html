@@ -78,20 +78,11 @@
         </fieldset>
 
         <fieldset>
-          <legend>Music &amp; language</legend>
+          <legend>Background music</legend>
           <div class="field">
             <label>Background music (MP3 URL)</label>
             <input type="text" id="music_url" placeholder="https://.../song.mp3" />
             <div class="hint">Optional. Plays muted with a floating mute/unmute button.</div>
-          </div>
-          <div class="field">
-            <label>Default language</label>
-            <select id="language_default">
-              <option value="en">English</option>
-              <option value="si">Sinhala (සිංහල)</option>
-              <option value="ta">Tamil (தமிழ்)</option>
-            </select>
-            <div class="hint">Guests can switch language on the invitation; your own text stays as written.</div>
           </div>
         </fieldset>
 
@@ -249,7 +240,6 @@
       document.getElementById('bride_name').value = inv.brideName || '';
       document.getElementById('story_text').value = inv.storyText || '';
       document.getElementById('music_url').value = inv.musicUrl || '';
-      document.getElementById('language_default').value = inv.languageDefault || 'en';
       const cf = inv.customFields || {};
       document.querySelectorAll('[data-cf]').forEach((el) => { el.value = cf[el.dataset.cf] || ''; });
       loadEventRows();
@@ -450,13 +440,13 @@
         bride_name: document.getElementById('bride_name').value,
         story_text: document.getElementById('story_text').value,
         music_url: document.getElementById('music_url').value,
-        language_default: document.getElementById('language_default').value,
+        language_default: 'en',
       };
       state.invitation.groomName = body.groom_name;
       state.invitation.brideName = body.bride_name;
       state.invitation.storyText = body.story_text;
       state.invitation.musicUrl = body.music_url;
-      state.invitation.languageDefault = body.language_default;
+      state.invitation.languageDefault = 'en';
       const cf = {};
       document.querySelectorAll('[data-cf]').forEach((el) => { if (el.value) cf[el.dataset.cf] = el.value; });
       body.custom_fields = cf;

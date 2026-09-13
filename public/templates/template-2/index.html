@@ -83,16 +83,11 @@
   <section class="block reveal-up">
     <p class="block-label" data-i18n="rsvp">04 — RSVP</p>
     <form data-thewed-rsvp class="rsvp">
-      <div class="pair">
-        <label data-i18n="name">Name<input type="text" name="guest_name" required /></label>
-        <label data-i18n="adults">Adults<input type="number" name="guest_count" min="0" value="1" /></label>
+      <input type="text" name="guest_name" placeholder="Your name" required />
+      <div class="tw-rsvp-actions">
+        <button type="submit" data-attending="yes" class="tw-rsvp-yes" data-i18n="accept">Joyfully Accept</button>
+        <button type="submit" data-attending="no" class="tw-rsvp-no" data-i18n="decline">Decline</button>
       </div>
-      <label data-i18n="children">Children<input type="number" name="children_count" min="0" value="0" /></label>
-      <label data-i18n="attend_q">Attending?
-        <select name="attending"><option value="yes" data-i18n="yes">Yes, I'll be there</option><option value="no" data-i18n="no">Sorry, can't make it</option></select>
-      </label>
-      <label data-i18n="message">Message<textarea name="message" rows="2"></textarea></label>
-      <button type="submit" data-i18n="send">Submit →</button>
       <p class="status" data-rsvp-status></p>
     </form>
     <p class="rsvp-phone mono" data-rsvp-phone></p>

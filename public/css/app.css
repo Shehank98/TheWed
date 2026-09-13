@@ -227,9 +227,15 @@ footer.site-footer { text-align: center; color: var(--muted); font-size: 13px; p
 .section-head p { color: var(--muted); font-size: 17px; }
 
 .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
-.feature { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; transition: transform .15s, box-shadow .15s; }
-.feature:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.feature { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .15s, opacity .5s ease; }
+/* Reveal-on-scroll: cards start hidden and rise into place (staggered via inline transition-delay). */
+.feature[data-reveal] { opacity: 0; transform: translateY(24px); }
+.feature[data-reveal].in { opacity: 1; transform: translateY(0); }
+.feature:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+.feature:hover .ico::after { transform: rotate(225deg) scale(1.1); }
 .feature .ico { width: 40px; height: 40px; border-radius: 10px; background: rgba(176,141,87,0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.feature .ico::after { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+@media (prefers-reduced-motion: reduce) { .feature[data-reveal] { opacity: 1; transform: none; transition: none; } }
 .feature .ico::after { content: ''; width: 12px; height: 12px; background: var(--gold); transform: rotate(45deg); border-radius: 2px; }
 .feature h3 { font-size: 18px; margin: 0 0 6px; }
 .feature p { color: var(--muted); font-size: 14px; margin: 0; }
