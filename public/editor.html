@@ -134,13 +134,32 @@
 
       <!-- GUESTS TAB -->
       <div id="tab-guests" style="display:none;">
-        <p class="hint">Add named guests to generate personalized links (each opens with “Dear &lt;name&gt;”). Export them to send out.</p>
-        <div class="field">
-          <label>Add guests (one name per line)</label>
-          <textarea id="guest-names" rows="3" placeholder="Nimal Perera&#10;Sunil &amp; Kamala"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <button class="btn small" id="add-guests">Add guests</button>
+        <p class="hint">Each guest gets a unique private link that greets them by name and shows only the events they’re invited to. Assign private events per guest, then send via WhatsApp.</p>
+
+        <fieldset>
+          <legend>Add a guest</legend>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="text" id="g-name" placeholder="Guest name" />
+            <input type="text" id="g-phone" placeholder="Phone (e.g. +94771234567)" />
+          </div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;margin-top:8px;">
+            <label style="font-size:13px;">Plus-one limit</label>
+            <input type="number" id="g-plusone" min="0" max="20" value="0" style="width:90px;" />
+          </div>
+          <div id="g-events" style="margin-top:8px;"></div>
+          <button class="btn small" id="g-add" style="margin-top:10px;">Add guest</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Bulk import (CSV)</legend>
+          <p class="hint" style="margin:0 0 8px;">Columns: <code>name, phone, plus_one_limit, events</code>. The events column is a semicolon-separated list of event names, or <code>all</code>. A header row is optional.</p>
+          <textarea id="g-csv" rows="4" placeholder="Nimal Perera,+94771234567,1,Poruwa;Reception&#10;Sunil,+94770000000,2,all"></textarea>
+          <button class="btn ghost small" id="g-import" style="margin-top:8px;">Import CSV</button>
+        </fieldset>
+
+        <div style="display:flex;gap:8px;margin:6px 0 14px;align-items:center;">
+          <strong style="flex:1;">Guests (<span id="g-count">0</span>)</strong>
+          <button class="btn small" id="guests-refresh">Refresh</button>
           <a class="btn ghost small" id="guests-export" href="#">Export to Excel</a>
         </div>
         <div id="guests-msg"></div>
@@ -325,6 +344,19 @@
     }
     document.getElementById('add-event-row').addEventListener('click', () => { addEventRow(); });
 
+    // Phase 2: per-event public/private toggle
+    window.renderPrivateToggle = function (row, ev) {
+      const wrap = row.querySelector('.e-private-wrap');
+      if (!wrap) return;
+      const isPriv = !!ev.is_private;
+      row.dataset.isPrivate = isPriv ? 'true' : 'false';
+      wrap.innerHTML = '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">' +
+        '<input type="checkbox" class="e-private" style="width:auto;"' + (isPriv ? ' checked' : '') + ' /> ' +
+        'Private event <span class="hint">(only assigned guests can see it)</span></label>';
+      const cb = wrap.querySelector('.e-private');
+      cb.addEventListener('change', () => { row.dataset.isPrivate = cb.checked ? 'true' : 'false'; onEventInput(); });
+    };
+
     function collect() {
       const body = {
         groom_name: document.getElementById('groom_name').value,
@@ -481,8 +513,30 @@
       });
     });
 
-    // ---- guest list ----
+    // ---- guests (Phase 2) ----
+    let guestEventList = [];  // [{id,name,is_private}]
+    function refreshGuestEventChoices() {
+      // events come from the saved event rows (need ids → use collectEvents but only saved ones)
+      guestEventList = collectEvents().filter((e) => e.id).map((e) => ({
+        id: e.id, name: e.event_name || e.event_type, is_private: !!e.is_private,
+      }));
+      const box = document.getElementById('g-events');
+      if (!guestEventList.length) { box.innerHTML = '<p class="hint">Save your events first (Build tab) to assign them.</p>'; return; }
+      box.innerHTML = '<div class="hint" style="margin-bottom:4px;">Invited to:</div>' + guestEventList.map((e) =>
+        `<label style="display:inline-flex;align-items:center;gap:5px;margin:0 12px 6px 0;font-size:13px;">
+          <input type="checkbox" class="g-ev" value="${e.id}" style="width:auto;" ${e.is_private ? '' : 'checked disabled'} />
+          ${esc(e.name)}${e.is_private ? ' <span class="badge draft" style="font-size:10px;">private</span>' : ' <span class="hint">(public)</span>'}
+        </label>`).join('');
+    }
+    function selectedEventIds() {
+      // public events are always included; private ones from checked boxes
+      const ids = guestEventList.filter((e) => !e.is_private).map((e) => e.id);
+      document.querySelectorAll('#g-events .g-ev:checked').forEach((cb) => ids.push(Number(cb.value)));
+      return Array.from(new Set(ids));
+    }
+
     async function loadGuests() {
+      refreshGuestEventChoices();
       const list = document.getElementById('guests-list');
       document.getElementById('guests-export').href = '/api/invitations/token/' + encodeURIComponent(token) + '/guests/export';
       list.innerHTML = '<p class="hint">Loading…</p>';
@@ -490,31 +544,60 @@
         const res = await api('/token/' + encodeURIComponent(token) + '/guests');
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed');
-        if (!data.published) document.getElementById('guests-msg').innerHTML = '<div class="notice warn">Publish your invitation to activate the personalized links.</div>';
-        else document.getElementById('guests-msg').innerHTML = '';
+        document.getElementById('g-count').textContent = data.guests.length;
+        document.getElementById('guests-msg').innerHTML = data.published ? ''
+          : '<div class="notice warn">Publish your invitation to activate the guest links.</div>';
         if (!data.guests.length) { list.innerHTML = '<p class="hint">No guests added yet.</p>'; return; }
-        list.innerHTML = '<table><thead><tr><th>Name</th><th>Link</th><th></th></tr></thead><tbody>' +
+        const evName = {}; guestEventList.forEach((e) => { evName[e.id] = e.name; });
+        list.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Phone</th><th>+1</th><th>Events</th><th>Link</th><th></th></tr></thead><tbody>' +
           data.guests.map((g) => `<tr>
             <td>${esc(g.guest_name)}</td>
-            <td>${g.link ? `<a href="${g.link}" target="_blank" rel="noopener" style="font-size:12px;word-break:break-all;">open</a> <button class="btn ghost small" data-copy="${encodeURIComponent(g.link)}">copy</button>` : '<span class="hint">publish first</span>'}</td>
+            <td>${esc(g.phone || '—')}</td>
+            <td>${g.plus_one_limit}</td>
+            <td style="font-size:12px;">${(g.event_ids || []).map((id) => esc(evName[id] || '')).filter(Boolean).join(', ') || '<span class="hint">public only</span>'}</td>
+            <td>${g.link ? `<button class="btn ghost small" data-copy="${encodeURIComponent(g.link)}">copy link</button>${g.whatsapp ? ` <a class="btn small" style="background:#25d366;" href="${g.whatsapp}" target="_blank" rel="noopener">WhatsApp</a>` : ''}` : '<span class="hint">publish first</span>'}</td>
             <td><button class="btn danger small" data-gdel="${g.id}">✕</button></td>
-          </tr>`).join('') + '</tbody></table>';
+          </tr>`).join('') + '</tbody></table></div>';
         list.querySelectorAll('[data-gdel]').forEach((b) => b.addEventListener('click', () => deleteGuest(b.dataset.gdel)));
         list.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
-          navigator.clipboard && navigator.clipboard.writeText(decodeURIComponent(b.dataset.copy));
-          b.textContent = 'copied';
+          try { navigator.clipboard.writeText(decodeURIComponent(b.dataset.copy)); b.textContent = 'copied'; } catch (e) {}
         }));
       } catch (e) { list.innerHTML = '<div class="notice err">' + e.message + '</div>'; }
     }
-    document.getElementById('add-guests').addEventListener('click', async () => {
-      const ta = document.getElementById('guest-names');
-      const names = ta.value.split('\n').map((s) => s.trim()).filter(Boolean);
-      if (!names.length) return;
+    document.getElementById('g-add').addEventListener('click', async () => {
+      const name = document.getElementById('g-name').value.trim();
+      if (!name) return;
+      const body = {
+        guest_name: name,
+        phone: document.getElementById('g-phone').value.trim(),
+        plus_one_limit: Number(document.getElementById('g-plusone').value) || 0,
+        event_ids: selectedEventIds(),
+      };
       const res = await api('/token/' + encodeURIComponent(token) + '/guests', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ names }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
-      if (res.ok) { ta.value = ''; loadGuests(); }
+      if (res.ok) {
+        document.getElementById('g-name').value = ''; document.getElementById('g-phone').value = '';
+        document.getElementById('g-plusone').value = '0';
+        loadGuests();
+      }
     });
+    document.getElementById('g-import').addEventListener('click', async () => {
+      const csv = document.getElementById('g-csv').value;
+      if (!csv.trim()) return;
+      const btn = document.getElementById('g-import'); btn.disabled = true; btn.textContent = 'Importing…';
+      const res = await api('/token/' + encodeURIComponent(token) + '/guests/import', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv }),
+      });
+      const data = await res.json();
+      const msg = document.getElementById('guests-msg');
+      msg.className = res.ok ? 'notice ok' : 'notice err';
+      msg.textContent = res.ok ? ('Imported ' + data.added + ' guests.') : (data.error || 'Import failed');
+      if (res.ok) document.getElementById('g-csv').value = '';
+      btn.disabled = false; btn.textContent = 'Import CSV';
+      loadGuests();
+    });
+    document.getElementById('guests-refresh').addEventListener('click', loadGuests);
     async function deleteGuest(id) {
       await api('/token/' + encodeURIComponent(token) + '/guests/' + id, { method: 'DELETE' });
       loadGuests();

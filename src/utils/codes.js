@@ -77,9 +77,23 @@ async function generateUniqueSlug(groomName, brideName, ignoreInvitationId = nul
   }
 }
 
+/**
+ * Short, URL-safe per-guest token used in ?g=<token> links.
+ */
+async function generateGuestToken(bytes = 9, maxAttempts = 6) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const token = crypto.randomBytes(bytes).toString('base64url');
+    // eslint-disable-next-line no-await-in-loop
+    const existing = await db('guests').where({ unique_token: token }).first();
+    if (!existing) return token;
+  }
+  throw new Error('Could not generate a unique guest token');
+}
+
 module.exports = {
   generateReferenceCode,
   generateMagicLinkToken,
   generateUniqueSlug,
+  generateGuestToken,
   baseSlug,
 };

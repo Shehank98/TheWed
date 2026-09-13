@@ -38,16 +38,20 @@
 
     async function load() {
       try {
-        const res = await fetch('/api/invitations/public/' + encodeURIComponent(slug));
+        const params = new URLSearchParams(location.search);
+        const g = params.get('g') || '';
+        const apiUrl = '/api/invitations/public/' + encodeURIComponent(slug) + (g ? ('?g=' + encodeURIComponent(g)) : '');
+        const res = await fetch(apiUrl);
         if (res.status === 404 || res.status === 410) { location.replace('/unavailable'); return; }
         if (!res.ok) throw new Error('Failed to load');
         const data = await res.json();
         data.mode = 'live';
-        // Per-guest personalization (?to=Name) + canonical share URL live on the
-        // parent page; the template runs in the iframe, so pass them in.
-        const params = new URLSearchParams(location.search);
-        data.guestName = params.get('to') || '';
+        // Per-guest link (?g=token) resolves the name server-side; ?to=Name is a
+        // fallback. The template runs in the iframe, so pass these in.
+        data.guestName = data.guestName || params.get('to') || '';
         data.publicUrl = location.origin + '/i/' + encodeURIComponent(slug);
+        // Ping link-opened tracking (Phase 5) — fire and forget.
+        if (g) { try { fetch('/api/invitations/public/' + encodeURIComponent(slug) + '/opened?g=' + encodeURIComponent(g), { method: 'POST' }); } catch (e) {} }
         payload = data;
         document.title = `${data.invitation.groomName} & ${data.invitation.brideName} — Wedding Invitation`;
         frame.src = '/templates/' + data.template.folderKey + '/index.html';

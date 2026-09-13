@@ -5,7 +5,7 @@ const QRCode = require('qrcode');
 const db = require('../db');
 const config = require('../config');
 const drive = require('../utils/drive');
-const { generateUniqueSlug } = require('../utils/codes');
+const { generateUniqueSlug, generateGuestToken } = require('../utils/codes');
 const { renderPayload, loadImages, normalizeSchedule, loadEvents, EVENT_TYPES } = require('../utils/serialize');
 
 const router = express.Router();
@@ -60,7 +60,21 @@ router.get('/public/:slug', async (req, res, next) => {
       created_at: w.created_at,
     }));
 
-    payload.events = await loadEvents(invitation);
+    // Events, gated by guest (?g=token). Private events are EXCLUDED from the
+    // response unless the guest is explicitly assigned to them (Phase 2/8).
+    const allEvents = await loadEvents(invitation);
+    const guestToken = (req.query.g || '').toString();
+    let guest = null;
+    let allowedPrivate = new Set();
+    if (guestToken) {
+      guest = await db('guests').where({ invitation_id: invitation.id, unique_token: guestToken }).first();
+      if (guest) {
+        const access = await db('guest_event_access').where({ guest_id: guest.id });
+        allowedPrivate = new Set(access.map((a) => Number(a.event_id)));
+      }
+    }
+    payload.events = allEvents.filter((e) => !e.isPrivate || allowedPrivate.has(Number(e.id)));
+    if (guest) payload.guestName = guest.guest_name;
 
     return res.json(payload);
   } catch (err) {
@@ -189,6 +203,7 @@ function cleanEvent(e) {
     venue_address: e.venue_address ? String(e.venue_address).slice(0, 600) : null,
     map_link: e.map_link ? String(e.map_link).slice(0, 4000) : null,
     sort_order: Number.isFinite(Number(e.sort_order)) ? Number(e.sort_order) : 0,
+    is_private: Boolean(e.is_private),
   };
 }
 
@@ -524,11 +539,55 @@ router.delete('/token/:token/wishes/:id', async (req, res, next) => {
 });
 
 // ===========================================================================
-// Guest list (dashboard) — per-guest personalized links + Excel export
+// Guests (dashboard) — per-guest tokens, event access, CSV import, Excel export
 // ===========================================================================
 
-function guestLink(slug, name) {
-  return `${config.baseUrl}/i/${slug}?to=${encodeURIComponent(name)}`;
+function guestLink(slug, guestToken) {
+  return slug ? `${config.baseUrl}/i/${slug}?g=${encodeURIComponent(guestToken)}` : null;
+}
+function whatsappNumber(phone) {
+  return String(phone || '').replace(/[^0-9]/g, '');
+}
+
+/** Serialize a guest with its assigned event ids + link + WhatsApp link. */
+async function serializeGuest(g, slug, coupleNames) {
+  const access = await db('guest_event_access').where({ guest_id: g.id });
+  const eventIds = access.map((a) => a.event_id);
+  const link = guestLink(slug, g.unique_token);
+  let whatsapp = null;
+  const num = whatsappNumber(g.phone);
+  if (num && link) {
+    const msg = `${coupleNames} are getting married! You're invited. See your invitation: ${link}`;
+    whatsapp = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+  }
+  return {
+    id: g.id,
+    guest_name: g.guest_name,
+    phone: g.phone || '',
+    plus_one_limit: g.plus_one_limit,
+    unique_token: g.unique_token,
+    event_ids: eventIds,
+    link,
+    whatsapp,
+    reminder_sent_at: g.reminder_sent_at || null,
+    link_opened_at: g.link_opened_at || null,
+  };
+}
+
+async function setGuestAccess(guestId, invitationId, eventIds) {
+  await db('guest_event_access').where({ guest_id: guestId }).del();
+  if (!Array.isArray(eventIds) || !eventIds.length) return;
+  const valid = await db('invitation_events')
+    .where({ invitation_id: invitationId })
+    .whereIn('id', eventIds.map(Number))
+    .pluck('id');
+  if (valid.length) {
+    await db('guest_event_access').insert(valid.map((eid) => ({ guest_id: guestId, event_id: eid })));
+  }
+}
+
+function coupleNamesOf(inv) {
+  return [inv.groom_name, inv.bride_name].filter(Boolean).join(' & ') || 'The couple';
 }
 
 /** GET /api/invitations/token/:token/guests */
@@ -536,41 +595,59 @@ router.get('/token/:token/guests', async (req, res, next) => {
   try {
     const ctx = await loadByToken(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
-    const guests = await db('guest_list')
-      .where({ invitation_id: ctx.invitation.id })
-      .orderBy('created_at', 'asc');
+    const rows = await db('guests').where({ invitation_id: ctx.invitation.id }).orderBy('created_at', 'asc');
     const slug = ctx.invitation.slug;
-    return res.json({
-      guests: guests.map((g) => ({
-        id: g.id,
-        guest_name: g.guest_name,
-        link: slug ? guestLink(slug, g.guest_name) : null,
-      })),
-      published: Boolean(slug),
-    });
+    const names = coupleNamesOf(ctx.invitation);
+    const guests = await Promise.all(rows.map((g) => serializeGuest(g, slug, names)));
+    return res.json({ guests, published: Boolean(slug) });
   } catch (err) {
     return next(err);
   }
 });
 
-/** POST /api/invitations/token/:token/guests — { guest_name } or { names: [] } */
+/** POST /api/invitations/token/:token/guests — create one guest. */
 router.post('/token/:token/guests', async (req, res, next) => {
   try {
     const ctx = await loadByToken(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const name = String(req.body.guest_name || '').trim();
+    if (!name) return res.status(400).json({ error: 'guest_name is required' });
+    const token = await generateGuestToken();
+    const [guest] = await db('guests')
+      .insert({
+        invitation_id: ctx.invitation.id,
+        guest_name: name.slice(0, 200),
+        phone: req.body.phone ? String(req.body.phone).slice(0, 40) : null,
+        plus_one_limit: Math.max(0, Math.min(20, Number(req.body.plus_one_limit) || 0)),
+        unique_token: token,
+      })
+      .returning('*');
+    await setGuestAccess(guest.id, ctx.invitation.id, req.body.event_ids || []);
+    const out = await serializeGuest(guest, ctx.invitation.slug, coupleNamesOf(ctx.invitation));
+    return res.status(201).json({ ok: true, guest: out });
+  } catch (err) {
+    return next(err);
+  }
+});
 
-    let names = [];
-    if (Array.isArray(req.body.names)) names = req.body.names;
-    else if (req.body.guest_name) names = [req.body.guest_name];
-    names = names
-      .map((n) => String(n || '').trim())
-      .filter(Boolean)
-      .map((n) => n.slice(0, 200));
-    if (!names.length) return res.status(400).json({ error: 'Provide guest_name or names[]' });
+/** PUT /api/invitations/token/:token/guests/:id — update a guest. */
+router.put('/token/:token/guests/:id', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const guest = await db('guests').where({ id: req.params.id, invitation_id: ctx.invitation.id }).first();
+    if (!guest) return res.status(404).json({ error: 'Guest not found' });
 
-    const rows = names.map((guest_name) => ({ invitation_id: ctx.invitation.id, guest_name }));
-    await db('guest_list').insert(rows);
-    return res.status(201).json({ ok: true, added: rows.length });
+    const update = {};
+    if ('guest_name' in req.body) update.guest_name = String(req.body.guest_name || '').slice(0, 200);
+    if ('phone' in req.body) update.phone = req.body.phone ? String(req.body.phone).slice(0, 40) : null;
+    if ('plus_one_limit' in req.body) update.plus_one_limit = Math.max(0, Math.min(20, Number(req.body.plus_one_limit) || 0));
+    if (Object.keys(update).length) await db('guests').where({ id: guest.id }).update(update);
+    if ('event_ids' in req.body) await setGuestAccess(guest.id, ctx.invitation.id, req.body.event_ids || []);
+
+    const refreshed = await db('guests').where({ id: guest.id }).first();
+    const out = await serializeGuest(refreshed, ctx.invitation.slug, coupleNamesOf(ctx.invitation));
+    return res.json({ ok: true, guest: out });
   } catch (err) {
     return next(err);
   }
@@ -581,37 +658,114 @@ router.delete('/token/:token/guests/:id', async (req, res, next) => {
   try {
     const ctx = await loadByToken(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
-    await db('guest_list').where({ id: req.params.id, invitation_id: ctx.invitation.id }).del();
+    await db('guests').where({ id: req.params.id, invitation_id: ctx.invitation.id }).del();
     return res.json({ ok: true });
   } catch (err) {
     return next(err);
   }
 });
 
+/**
+ * POST /api/invitations/token/:token/guests/import — bulk CSV import.
+ * Body: { csv: "name,phone,plus_one_limit,events\n..." }
+ * The "events" column is a semicolon-separated list of event names, or "all".
+ */
+router.post('/token/:token/guests/import', async (req, res, next) => {
+  try {
+    const ctx = await loadByToken(req.params.token);
+    if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
+    const csv = String(req.body.csv || '');
+    if (!csv.trim()) return res.status(400).json({ error: 'csv is required' });
+
+    const events = await db('invitation_events').where({ invitation_id: ctx.invitation.id });
+    const byName = new Map(events.map((e) => [String(e.event_name || '').trim().toLowerCase(), e.id]));
+    const allIds = events.map((e) => e.id);
+
+    const lines = csv.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    // Skip a header row if present
+    if (lines.length && /name/i.test(lines[0]) && /phone/i.test(lines[0])) lines.shift();
+
+    let added = 0;
+    for (const line of lines) {
+      const cols = parseCsvLine(line);
+      const name = (cols[0] || '').trim();
+      if (!name) continue;
+      const phone = (cols[1] || '').trim() || null;
+      const plusOne = Math.max(0, Math.min(20, Number(cols[2]) || 0));
+      const evCol = (cols[3] || '').trim();
+      let eventIds = [];
+      if (/^all$/i.test(evCol)) eventIds = allIds;
+      else if (evCol) {
+        eventIds = evCol.split(/[;|]/).map((n) => byName.get(n.trim().toLowerCase())).filter(Boolean);
+      }
+      // eslint-disable-next-line no-await-in-loop
+      const token = await generateGuestToken();
+      // eslint-disable-next-line no-await-in-loop
+      const [guest] = await db('guests')
+        .insert({ invitation_id: ctx.invitation.id, guest_name: name.slice(0, 200), phone, plus_one_limit: plusOne, unique_token: token })
+        .returning('id');
+      // eslint-disable-next-line no-await-in-loop
+      await setGuestAccess(typeof guest === 'object' ? guest.id : guest, ctx.invitation.id, eventIds);
+      added += 1;
+    }
+    return res.status(201).json({ ok: true, added });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i += 1; }
+      else if (ch === '"') inQ = false;
+      else cur += ch;
+    } else if (ch === '"') inQ = true;
+    else if (ch === ',') { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
 /** GET /api/invitations/token/:token/guests/export — .xlsx of guests + links */
 router.get('/token/:token/guests/export', async (req, res, next) => {
   try {
     const ctx = await loadByToken(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'Invalid or expired link' });
-    const guests = await db('guest_list')
-      .where({ invitation_id: ctx.invitation.id })
-      .orderBy('created_at', 'asc');
+    const rows = await db('guests').where({ invitation_id: ctx.invitation.id }).orderBy('created_at', 'asc');
     const slug = ctx.invitation.slug;
+    const events = await db('invitation_events').where({ invitation_id: ctx.invitation.id });
+    const eventName = new Map(events.map((e) => [e.id, e.event_name || e.event_type]));
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'TheWed';
-    const sheet = workbook.addWorksheet('Guest list');
+    const sheet = workbook.addWorksheet('Guests');
     sheet.columns = [
-      { header: 'Guest Name', key: 'guest_name', width: 30 },
+      { header: 'Guest Name', key: 'guest_name', width: 28 },
+      { header: 'Phone', key: 'phone', width: 18 },
+      { header: 'Plus-one limit', key: 'plus_one_limit', width: 14 },
+      { header: 'Assigned events', key: 'events', width: 30 },
       { header: 'Personalized Link', key: 'link', width: 70 },
     ];
     sheet.getRow(1).font = { bold: true };
-    guests.forEach((g) => {
-      sheet.addRow({ guest_name: g.guest_name, link: slug ? guestLink(slug, g.guest_name) : '(publish first)' });
-    });
+    for (const g of rows) {
+      // eslint-disable-next-line no-await-in-loop
+      const access = await db('guest_event_access').where({ guest_id: g.id }).pluck('event_id');
+      sheet.addRow({
+        guest_name: g.guest_name,
+        phone: g.phone || '',
+        plus_one_limit: g.plus_one_limit,
+        events: access.map((id) => eventName.get(id)).filter(Boolean).join('; '),
+        link: guestLink(slug, g.unique_token) || '(publish first)',
+      });
+    }
 
-    const coupleName =
-      [ctx.invitation.groom_name, ctx.invitation.bride_name].filter(Boolean).join('-') || 'invitation';
+    const coupleName = [ctx.invitation.groom_name, ctx.invitation.bride_name].filter(Boolean).join('-') || 'invitation';
     const safeName = coupleName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="guest-list-${safeName}.xlsx"`);
