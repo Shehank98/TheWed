@@ -743,6 +743,99 @@
     opener.addEventListener('click', open);
   }
 
+  // ---- Ambient falling petals (themed, tasteful, GPU-light) ----
+  // Each template names a palette via <body data-petals="rose|gold|blush|ember|temple">.
+  // A single canvas drifts translucent petals down the page: gentle sway + a
+  // horizontal "flutter" (scaleX oscillation) so they tumble like real petals.
+  var PETAL_PRESETS = {
+    rose:   { colors: ['#e7b7c1', '#eecad0', '#d7a0ad', '#f6dde2'], density: 1.0, alpha: [0.45, 0.8] },
+    gold:   { colors: ['#e6d3a3', '#f0e6c8', '#d9c48a', '#fbf4e0'], density: 0.85, alpha: [0.4, 0.75] },
+    blush:  { colors: ['#f3dfe4', '#ffffff', '#f7e9ec', '#f6d9e0'], density: 0.6, alpha: [0.35, 0.65] },
+    ember:  { colors: ['#e6c976', '#d4af6a', '#c8a24a', '#f5e2a8'], density: 0.8, alpha: [0.5, 0.85] },
+    temple: { colors: ['#f3e3b0', '#ffffff', '#f0c14b', '#f7ecc9'], density: 0.95, alpha: [0.45, 0.8] },
+  };
+
+  function initAmbient() {
+    if (document.getElementById('tw-petals')) return;
+    var key = (document.body.getAttribute('data-petals') || '').toLowerCase();
+    if (key === 'none') return;
+    var preset = PETAL_PRESETS[key] || PETAL_PRESETS.rose;
+    if (global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var canvas = document.createElement('canvas');
+    canvas.id = 'tw-petals';
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4';
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(global.devicePixelRatio || 1, 2);
+    var W = 0, H = 0;
+
+    function resize() {
+      W = global.innerWidth; H = global.innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    global.addEventListener('resize', resize);
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    var count = Math.max(10, Math.min(30, Math.round((W / 42) * preset.density)));
+    var petals = [];
+    function spawn(initial) {
+      return {
+        x: rand(0, W),
+        y: initial ? rand(-H, H) : rand(-40, -10),
+        size: rand(6, 13),
+        vy: rand(0.4, 1.3),
+        sway: rand(18, 46),
+        swaySpeed: rand(0.006, 0.016),
+        phase: rand(0, Math.PI * 2),
+        rot: rand(0, Math.PI * 2),
+        vr: rand(-0.02, 0.02),
+        spin: rand(0, Math.PI * 2),
+        vs: rand(0.02, 0.05),
+        color: preset.colors[(Math.random() * preset.colors.length) | 0],
+        alpha: rand(preset.alpha[0], preset.alpha[1]),
+      };
+    }
+    for (var i = 0; i < count; i += 1) petals.push(spawn(true));
+
+    function drawPetal(p) {
+      var s = p.size;
+      ctx.save();
+      ctx.translate(p.x + Math.sin(p.phase) * p.sway, p.y);
+      ctx.rotate(p.rot);
+      ctx.scale(Math.cos(p.spin) * 0.85 + 0.15, 1); // flutter around the vertical axis
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.bezierCurveTo(s * 0.62, -s * 0.6, s * 0.62, s * 0.62, 0, s);
+      ctx.bezierCurveTo(-s * 0.62, s * 0.62, -s * 0.62, -s * 0.6, 0, -s);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    var running = true;
+    document.addEventListener('visibilitychange', function () { running = !document.hidden; if (running) frame(); });
+    function frame() {
+      if (!running) return;
+      ctx.clearRect(0, 0, W, H);
+      for (var j = 0; j < petals.length; j += 1) {
+        var p = petals[j];
+        p.y += p.vy;
+        p.phase += p.swaySpeed;
+        p.rot += p.vr;
+        p.spin += p.vs;
+        if (p.y - p.size > H) { petals[j] = spawn(false); }
+        drawPetal(p);
+      }
+      global.requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
   var TheWed = {
     data: null, _cd: null,
     escapeHtml: escapeHtml, formatDate: formatDate, parseDate: parseDate,
@@ -773,6 +866,7 @@
       }
       injectSharedStyles();
       initOpener();
+      initAmbient();
       global.addEventListener('message', function (e) {
         if (e && e.data && e.data.type === 'thewed:data') run(e.data.data);
       });
