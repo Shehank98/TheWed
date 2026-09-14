@@ -204,20 +204,51 @@ footer.site-footer { text-align: center; color: var(--muted); font-size: 13px; p
 .hero-copy h1 { font-family: Georgia, serif; font-weight: 500; font-size: clamp(38px, 5.4vw, 60px); line-height: 1.05; margin: 0 0 18px; }
 .hero-copy .lead { font-size: 19px; color: var(--muted); max-width: 520px; margin: 0 0 28px; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.hero-eyebrow { text-transform: uppercase; letter-spacing: 3px; font-size: 12px; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
 .hero-trust { margin-top: 22px; color: var(--muted); font-size: 13px; display: flex; gap: 18px; flex-wrap: wrap; }
 .hero-trust b { color: var(--gold-dark); }
-.hero-art { position: relative; height: 420px; }
-.hero-card {
-  position: absolute; background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.12); overflow: hidden;
-}
-.hero-card.c1 { width: 62%; top: 0; left: 0; transform: rotate(-4deg); z-index: 2; }
-.hero-card.c2 { width: 58%; bottom: 0; right: 0; transform: rotate(5deg); z-index: 1; }
-.hero-card img, .hero-card svg { display: block; width: 100%; }
+.hero-art { position: relative; display: flex; justify-content: center; align-items: center; }
+.hero-phone { width: 270px; }
 @media (max-width: 860px) {
   .landing-hero .container { grid-template-columns: 1fr; }
-  .hero-art { height: 300px; order: -1; }
+  .hero-art { order: -1; }
+  .hero-phone { width: 230px; }
 }
+
+/* ---- Phone-framed live template previews ---- */
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 34px 24px; }
+.tpl-card { text-align: center; }
+.phone {
+  position: relative; width: 240px; max-width: 100%; margin: 0 auto;
+  aspect-ratio: 39 / 82; background: #14110d; border-radius: 34px; padding: 9px;
+  box-shadow: 0 26px 54px rgba(0,0,0,0.24), inset 0 0 0 2px rgba(255,255,255,0.06);
+  transition: transform .45s cubic-bezier(.2,.7,.2,1), box-shadow .45s;
+}
+.tpl-card:hover .phone { transform: translateY(-10px); box-shadow: 0 34px 64px rgba(0,0,0,0.3); }
+.phone-notch { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 80px; height: 16px; background: #14110d; border-radius: 0 0 12px 12px; z-index: 3; }
+.phone-screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 26px; background: #fff; }
+.phone-screen iframe { position: absolute; top: 0; left: 0; width: 390px; height: 1000px; border: 0; transform-origin: top left; pointer-events: none; }
+.phone-open { position: absolute; inset: 0; z-index: 4; border-radius: 34px; }
+.tpl-info h3 { font-family: Georgia, serif; font-weight: 500; font-size: 21px; margin: 20px 0 3px; }
+.tpl-style { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; }
+.tpl-price { font-family: Georgia, serif; font-size: 22px; color: var(--gold-dark); margin: 9px 0 13px; }
+.tpl-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* ---- Pricing ---- */
+.price-card {
+  max-width: 620px; margin: 0 auto; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 22px; padding: 40px 34px; box-shadow: var(--shadow); text-align: center;
+}
+.price-badge { display: inline-block; background: rgba(176,141,87,0.12); color: var(--gold-dark); font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; }
+.price-amount { font-size: 20px; color: var(--muted); margin: 16px 0 2px; }
+.price-amount b { font-family: Georgia, serif; font-weight: 500; font-size: 52px; color: var(--ink); }
+.price-sub { color: var(--muted); font-size: 14px; }
+.price-list { list-style: none; padding: 0; margin: 28px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; text-align: left; }
+.price-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; }
+.price-list svg { color: var(--gold); flex: 0 0 auto; margin-top: 1px; }
+.price-card .btn.block { max-width: 320px; margin: 0 auto; }
+.price-foot { color: var(--muted); font-size: 13px; margin: 16px 0 0; }
+@media (max-width: 520px) { .price-list { grid-template-columns: 1fr; } .price-card { padding: 30px 22px; } }
 
 .section { padding: 76px 0; }
 .section.alt { background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }

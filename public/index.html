@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TheWed · Beautiful digital wedding invitations</title>
-  <meta name="description" content="Design a stunning digital wedding invitation with live RSVP, guestbook, countdown, maps, music, QR sharing and multi-language support. Pick a template, pay by bank transfer, and share in minutes." />
+  <meta name="description" content="Design a stunning digital wedding invitation with live RSVP, a guest photo wall, countdown, maps, music and one-tap sharing. Preview every design free, pay once — no monthly fees." />
   <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
@@ -12,10 +12,10 @@
     <div class="container">
       <a class="brand" href="/">TheWed</a>
       <nav class="nav-links">
+        <a href="#templates">Templates</a>
+        <a href="#pricing">Pricing</a>
         <a href="#features">Features</a>
         <a href="#how">How it works</a>
-        <a href="#templates">Templates</a>
-        <a href="#faq">FAQ</a>
         <a class="btn small" href="#templates">Get started</a>
       </nav>
     </div>
@@ -25,21 +25,57 @@
   <section class="landing-hero">
     <div class="container">
       <div class="hero-copy">
+        <div class="hero-eyebrow">Digital wedding invitations</div>
         <h1 class="serif">Your love story,<br />beautifully invited.</h1>
-        <p class="lead">Create a stunning digital wedding invitation with a live RSVP, guestbook, countdown, maps, music and one-tap sharing, ready in minutes.</p>
+        <p class="lead">Pick a designer template, personalise it in minutes, and share a stunning living invitation — with live RSVP, a guest photo wall, countdown, maps and music.</p>
         <div class="hero-cta">
-          <a class="btn" href="#templates">Choose a template</a>
-          <a class="btn ghost" href="#how">See how it works</a>
+          <a class="btn" href="#templates">Browse templates</a>
+          <a class="btn ghost" href="#pricing">See pricing</a>
         </div>
         <div class="hero-trust">
-          <span><b>5</b> designer templates</span>
-          <span><b>Sinhala · Tamil · English</b></span>
-          <span><b>Live</b> RSVP &amp; guest list</span>
+          <span><b>Preview free</b> · pay only to publish</span>
+          <span><b>One-time</b> payment</span>
+          <span><b>Unlimited</b> guests &amp; RSVPs</span>
         </div>
       </div>
       <div class="hero-art">
-        <div class="hero-card c1"><img src="/templates/template-5/preview.svg" alt="Sri Lankan traditional template" /></div>
-        <div class="hero-card c2"><img src="/templates/template-4/preview.svg" alt="Cinematic dark template" /></div>
+        <div class="phone hero-phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" data-preview="template-3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEMPLATES -->
+  <section class="section" id="templates">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Designer templates</div>
+        <h2 class="serif">Find a design you'll fall in love with</h2>
+        <p>Every template is a living, animated invitation. Tap any one for a full live preview — then make it yours.</p>
+      </div>
+      <div id="template-grid" class="tpl-grid"></div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section alt" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <div class="kicker">Simple, honest pricing</div>
+        <h2 class="serif">One price. Everything included.</h2>
+        <p>Preview every design for free. Pay once when you're ready to publish — no subscriptions, no monthly fees, ever.</p>
+      </div>
+      <div class="price-card">
+        <div class="price-top">
+          <span class="price-badge">One-time payment</span>
+          <div class="price-amount">from <b id="price-amount">LKR 2,500</b></div>
+          <div class="price-sub">per invitation · yours to keep</div>
+        </div>
+        <ul class="price-list" id="price-list"></ul>
+        <a class="btn block" href="#templates">Choose your design</a>
+        <p class="price-foot">Pay by bank transfer. We confirm your payment and send a private link to build and publish your invitation.</p>
       </div>
     </div>
   </section>
@@ -65,47 +101,33 @@
         <p>From choosing a design to sharing with guests in four easy steps.</p>
       </div>
       <div class="steps">
-        <div class="step"><div class="num">1</div><h3>Choose a template</h3><p>Pick one of five designer styles that fits your celebration.</p></div>
-        <div class="step"><div class="num">2</div><h3>Pay by bank transfer</h3><p>Get a reference code and our bank details. We confirm your payment.</p></div>
-        <div class="step"><div class="num">3</div><h3>Build your invitation</h3><p>A private link lets you add names, photos, schedule, story and more, with a live preview.</p></div>
+        <div class="step"><div class="num">1</div><h3>Choose a template</h3><p>Preview every design live and pick the style that fits your celebration.</p></div>
+        <div class="step"><div class="num">2</div><h3>Pay once</h3><p>Get a reference code and our bank details. We confirm your payment.</p></div>
+        <div class="step"><div class="num">3</div><h3>Build your invitation</h3><p>A private link lets you add names, photos, schedule and story, with a live preview.</p></div>
         <div class="step"><div class="num">4</div><h3>Publish &amp; share</h3><p>Get your own link and QR code, and share on WhatsApp in one tap.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- TEMPLATES -->
-  <section class="section" id="templates">
-    <div class="container">
-      <div class="section-head">
-        <div class="kicker">Designer templates</div>
-        <h2 class="serif">Choose your style</h2>
-        <p>Each template is fully self-contained with its own animations. Preview any of them live.</p>
-      </div>
-      <div id="template-grid" class="grid">
-        <p class="notice warn">Loading templates…</p>
-      </div>
-    </div>
-  </section>
-
   <!-- FAQ -->
-  <section class="section alt" id="faq">
+  <section class="section" id="faq">
     <div class="container">
       <div class="section-head">
         <div class="kicker">Good to know</div>
         <h2 class="serif">Frequently asked questions</h2>
       </div>
       <div class="faq">
-        <details open><summary>How do I pay?</summary><p>After you place an order you’ll get a reference code and our bank transfer details. Once we confirm your payment, we email you a private link to build your invitation.</p></details>
-        <details><summary>Can I edit after publishing?</summary><p>Yes. Your private link keeps working, so you can edit anytime and re-publish. Your public link and slug stay the same.</p></details>
-        <details><summary>What happens to my invitation after the wedding?</summary><p>It stays live for 90 days after your wedding date, then automatically archives. You (or we) can adjust that date anytime.</p></details>
-        <details><summary>Can guests RSVP and leave wishes?</summary><p>Absolutely. Every invitation has a live RSVP form where guests enter their name and whether they can come, plus a guestbook for wishes. Every reply appears in your dashboard, and you can export all RSVPs to Excel.</p></details>
-        <details><summary>Do you support Sinhala and Tamil?</summary><p>Yes, guests can switch the interface between Sinhala, Tamil and English. Your own text stays exactly as you wrote it.</p></details>
+        <details open><summary>Can I see a design before I pay?</summary><p>Yes — tap “Live preview” on any template to open the full, animated invitation. You only pay once you’ve chosen a design and are ready to build your own.</p></details>
+        <details><summary>How do I pay?</summary><p>After you place an order you’ll get a reference code and our bank transfer details. Once we confirm your payment, we send you a private link to build your invitation.</p></details>
+        <details><summary>Can I edit after publishing?</summary><p>Yes. Your private link keeps working, so you can edit anytime and re-publish. Your public link stays the same.</p></details>
+        <details><summary>Can guests add their own photos?</summary><p>Yes — every invitation has a live guest photo wall. Guests upload snapshots straight from their phones and they appear in your gallery. You can remove any you like.</p></details>
+        <details><summary>What happens after the wedding?</summary><p>Your invitation stays live for 90 days after your wedding date, then automatically archives. You (or we) can adjust that date anytime.</p></details>
       </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section class="section">
+  <section class="section alt">
     <div class="container">
       <div class="cta-band">
         <h2 class="serif">Ready to invite the world?</h2>
@@ -138,6 +160,7 @@
   </footer>
 
   <script>
+    // ---- Features ----
     const FEATURES = [
       ['Live guest photo wall', 'Guests add their own snapshots straight from their phones and your gallery fills with candid moments in real time — you can remove any you like.'],
       ['Animated photo carousel', 'Your photos glide past in a gentle, auto-playing carousel, with a tap to open any shot full-screen.'],
@@ -156,7 +179,18 @@
     fg.innerHTML = FEATURES.map((f, i) => `
       <div class="feature" data-reveal style="transition-delay:${(i % 3) * 90}ms"><span class="ico" aria-hidden="true"></span><h3>${f[0]}</h3><p>${f[1]}</p></div>`).join('');
 
-    // Staggered reveal-on-scroll for the feature cards.
+    // ---- Pricing checklist ----
+    const INCLUDED = [
+      'Your own live invitation link', 'Unlimited guests &amp; RSVPs',
+      'Live guest photo wall', 'Animated photo gallery',
+      'Countdown, schedule &amp; maps', 'Guestbook &amp; wishes',
+      'Background music', 'WhatsApp share + QR code',
+      'Personalised guest links', 'Edit anytime · stays live after the day',
+    ];
+    const check = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    document.getElementById('price-list').innerHTML = INCLUDED.map((x) => `<li>${check}<span>${x}</span></li>`).join('');
+
+    // ---- Reveal-on-scroll (features) ----
     (function () {
       const cards = document.querySelectorAll('#feature-grid .feature');
       if (!('IntersectionObserver' in window)) { cards.forEach((c) => c.classList.add('in')); return; }
@@ -166,38 +200,101 @@
       cards.forEach((c) => io.observe(c));
     })();
 
-    const grid = document.getElementById('template-grid');
-    const modal = document.getElementById('order-modal');
     function money(v) { return 'LKR ' + Number(v).toLocaleString('en-LK', { minimumFractionDigits: 0 }); }
 
-    async function loadTemplates() {
+    // ---- Templates: built-in list (always renders), enriched by the API ----
+    const grid = document.getElementById('template-grid');
+    const modal = document.getElementById('order-modal');
+    const TEMPLATES = [
+      { folder_key: 'template-1', name: 'Classic Elegance', style: 'Envelope reveal', price: 2500 },
+      { folder_key: 'template-2', name: 'Modern Minimal', style: 'Curtain reveal', price: 2500 },
+      { folder_key: 'template-3', name: 'Floral Romance', style: 'Blooming flowers', price: 3000 },
+      { folder_key: 'template-4', name: 'Cinematic Noir', style: 'Film letterbox', price: 3500 },
+      { folder_key: 'template-5', name: 'Sri Lankan Traditional', style: 'Opening doors', price: 3000 },
+    ];
+
+    function renderTemplates(list) {
+      grid.innerHTML = list.map((t) => `
+        <article class="tpl-card" data-folder="${t.folder_key}">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen" data-preview="${t.folder_key}"></div>
+            <a class="phone-open" href="/templates/${t.folder_key}/index.html" target="_blank" rel="noopener" aria-label="Live preview of ${t.name}"></a>
+          </div>
+          <div class="tpl-info">
+            <h3>${t.name}</h3>
+            <div class="tpl-style">${t.style}</div>
+            <div class="tpl-price" data-price>${money(t.price)}</div>
+            <div class="tpl-actions">
+              <a class="btn ghost small" href="/templates/${t.folder_key}/index.html" target="_blank" rel="noopener">Live preview</a>
+              <button class="btn small" data-select disabled title="Loading…">Select</button>
+            </div>
+          </div>
+        </article>`).join('');
+      lazyPreviews();
+      sizePhones();
+    }
+
+    // Lazy-load a scaled live iframe into each phone screen when it scrolls into view.
+    function lazyPreviews() {
+      const screens = document.querySelectorAll('.phone-screen[data-preview]');
+      function load(screen) {
+        if (screen._loaded) return; screen._loaded = true;
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('scrolling', 'no');
+        iframe.setAttribute('tabindex', '-1');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.src = '/templates/' + screen.getAttribute('data-preview') + '/index.html';
+        iframe.addEventListener('load', () => sizePhones());
+        screen.appendChild(iframe);
+      }
+      if (!('IntersectionObserver' in window)) { screens.forEach(load); return; }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => { if (en.isIntersecting) { load(en.target); io.unobserve(en.target); } });
+      }, { rootMargin: '200px' });
+      screens.forEach((s) => io.observe(s));
+    }
+
+    // Scale each preview iframe (rendered at 390px wide) to fill its phone screen.
+    function sizePhones() {
+      document.querySelectorAll('.phone-screen').forEach((screen) => {
+        const iframe = screen.querySelector('iframe');
+        if (!iframe) return;
+        const s = screen.clientWidth / 390;
+        iframe.style.transform = 'scale(' + s + ')';
+      });
+    }
+    window.addEventListener('resize', sizePhones);
+
+    async function enrichFromApi() {
       try {
         const res = await fetch('/api/templates');
+        if (!res.ok) return;
         const { templates } = await res.json();
-        grid.innerHTML = '';
-        templates.forEach((t) => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <div class="thumb"><img src="${t.preview_url}" alt="${t.name} preview" onerror="this.style.display='none'"/></div>
-            <div class="body">
-              <h3>${t.name}</h3>
-              <div class="meta">${t.animation_style.replace(/-/g, ' ')}</div>
-              <div class="price">${money(t.price)}</div>
-              <div style="display:flex;gap:8px;margin-top:14px;">
-                <a class="btn ghost small" href="/templates/${t.folder_key}/index.html" target="_blank" rel="noopener">Preview</a>
-                <button class="btn small" data-id="${t.id}" data-name="${t.name}" data-price="${t.price}">Select</button>
-              </div>
-            </div>`;
-          grid.appendChild(card);
+        if (!templates || !templates.length) return;
+        const byKey = {};
+        templates.forEach((t) => { byKey[t.folder_key] = t; });
+        let min = Infinity;
+        document.querySelectorAll('.tpl-card').forEach((card) => {
+          const t = byKey[card.dataset.folder];
+          if (!t) return;
+          card.querySelector('h3').textContent = t.name;
+          if (t.animation_style) card.querySelector('.tpl-style').textContent = t.animation_style.replace(/-/g, ' ');
+          card.querySelector('[data-price]').textContent = money(t.price);
+          const btn = card.querySelector('[data-select]');
+          btn.disabled = false; btn.removeAttribute('title');
+          btn.dataset.id = t.id; btn.dataset.name = t.name; btn.dataset.price = t.price;
+          min = Math.min(min, Number(t.price));
         });
-        grid.querySelectorAll('button[data-id]').forEach((btn) => {
-          btn.addEventListener('click', () => openOrder(btn.dataset.id, btn.dataset.name, btn.dataset.price));
-        });
-      } catch (e) {
-        grid.innerHTML = '<p class="notice err">Could not load templates. Please refresh.</p>';
-      }
+        if (min !== Infinity) document.getElementById('price-amount').textContent = money(min);
+      } catch (e) { /* keep built-in list */ }
     }
+
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-select]');
+      if (!btn || btn.disabled) return;
+      openOrder(btn.dataset.id, btn.dataset.name, btn.dataset.price);
+    });
 
     function openOrder(id, name, price) {
       document.getElementById('template_id').value = id;
@@ -237,7 +334,9 @@
       }
     });
 
-    loadTemplates();
+    // Render the gallery (also lazy-loads the hero preview) then enrich prices from the API.
+    renderTemplates(TEMPLATES);
+    enrichFromApi();
   </script>
 </body>
 </html>
