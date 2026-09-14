@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wedding Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Marcellus&family=Cormorant+Garamond:ital@0;1&family=Noto+Serif+Sinhala:wght@600&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Marcellus&family=Cormorant+Garamond:ital@0;1&family=Noto+Serif+Sinhala:wght@600&display=swap" /></noscript>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-petals="ember">
+  <!-- INTRO: royal medallion opener -->
+  <div class="opener" data-opener>
+    <div class="op-medallion">
+      <svg class="op-peacock" viewBox="0 0 160 160" aria-hidden="true"><use href="#peacock"/></svg>
+      <div class="op-ring"></div>
+    </div>
+    <p class="op-ayu">ආයුබෝවන්</p>
+    <p class="op-names"><span data-groom>—</span> <span class="op-amp">&amp;</span> <span data-bride>—</span></p>
+    <p class="op-tap">Tap to unseal</p>
+  </div>
+
+  <header class="hero">
+    <svg class="hero-peacock" viewBox="0 0 160 160" aria-hidden="true"><use href="#peacock"/></svg>
+    <p class="ayubowan reveal">ආයුබෝවන්</p>
+    <p class="guest-greeting reveal" data-guest-greeting-section style="display:none"><span data-guest-greeting></span></p>
+    <p class="eyebrow reveal">The families joyfully request your presence</p>
+    <div class="names reveal">
+      <h1 data-groom>—</h1>
+      <div class="amp">&amp;</div>
+      <h1 data-bride>—</h1>
+    </div>
+    <p class="tagline reveal">at the celebration of their marriage</p>
+    <p class="nekath reveal" data-nekath></p>
+    <div class="hero-date reveal" data-date-long></div>
+  </header>
+
+  <section class="cd reveal">
+    <div class="today-msg" data-today style="display:none"></div>
+    <div class="cd-grid" data-countdown>
+      <div><b data-cd-days>0</b><span data-i18n="days">Days</span></div>
+      <div><b data-cd-hours>0</b><span data-i18n="hours">Hours</span></div>
+      <div><b data-cd-mins>0</b><span data-i18n="minutes">Minutes</span></div>
+      <div><b data-cd-secs>0</b><span data-i18n="seconds">Seconds</span></div>
+    </div>
+  </section>
+
+  <section class="schedule reveal" data-schedule-section style="display:none">
+    <h2 class="orn-title" data-i18n="schedule">Schedule</h2>
+    <div class="tw-timeline" data-schedule></div>
+  </section>
+
+  <section class="story" data-story-timeline-section style="display:none">
+    <h2 class="orn-title" data-i18n="our_story">Our Story</h2>
+    <div data-story-timeline></div>
+  </section>
+
+  <section class="story reveal" data-story-section>
+    <h2 class="orn-title">Our Story</h2>
+    <div class="story-photo" data-couple-photo></div>
+    <p class="story-text" data-story></p>
+  </section>
+
+  <section class="details reveal">
+    <h2 class="orn-title">The Auspicious Day</h2>
+    <div class="detail-card">
+      <div class="d-row"><span class="lbl">Date</span><span data-date-long></span></div>
+      <div class="d-row"><span class="lbl">Poruwa Ceremony</span><span data-time></span></div>
+      <div class="d-row"><span class="lbl">Venue</span><span data-venue-name></span></div>
+      <div class="d-row"><span class="lbl">Address</span><span data-venue-address></span></div>
+      <div class="d-row" data-reception-row><span class="lbl">Reception</span><span data-reception></span></div>
+    </div>
+    <div class="map-block" data-map-section style="display:none">
+      <div class="map-embed" data-map-embed></div>
+      <a class="directions-btn" data-directions href="#" data-i18n="directions">Get Directions</a>
+    </div>
+  </section>
+
+  <section class="gallery reveal" data-gallery-section>
+    <h2 class="orn-title">Cherished Moments</h2>
+    <div class="gallery-grid" data-gallery></div>
+  </section>
+
+  <section class="rsvp reveal">
+    <h2 class="orn-title" data-i18n="rsvp">Kindly Respond</h2>
+    <form data-thewed-rsvp class="rsvp-form">
+      <input type="text" name="guest_name" placeholder="Your name" required />
+      <div class="tw-rsvp-actions">
+        <button type="submit" data-attending="yes" class="tw-rsvp-yes" data-i18n="accept">Joyfully Accept</button>
+        <button type="submit" data-attending="no" class="tw-rsvp-no" data-i18n="decline">Regretfully Decline</button>
+      </div>
+      <p class="status" data-rsvp-status></p>
+    </form>
+    <p class="rsvp-phone" data-rsvp-phone></p>
+    <p style="text-align:center;margin-top:18px"><a class="share-btn" data-share-whatsapp href="#" data-i18n="share">Share on WhatsApp</a></p>
+  </section>
+
+  <section class="guestbook reveal" data-guestbook-section>
+    <h2 class="orn-title" data-i18n="wishes">Wishes &amp; Blessings</h2>
+    <form data-wish-form class="wish-form">
+      <input type="text" name="guest_name" data-i18n-ph="wish_name" placeholder="Your name" required />
+      <textarea name="message" rows="2" data-i18n-ph="wish_msg" placeholder="Your wish for the couple" required></textarea>
+      <button type="submit" data-i18n="wish_send">Post wish</button>
+      <p class="status" data-wish-status></p>
+    </form>
+    <div class="wishes-list" data-wishes></div>
+  </section>
+
+  <footer class="foot">
+    <svg class="foot-peacock" viewBox="0 0 160 160" aria-hidden="true"><use href="#peacock"/></svg>
+    <p class="hashtag" data-hashtag></p>
+    <p class="made">TheWed</p>
+  </footer>
+
+  <!-- SVG motif: stylised peacock -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="peacock" viewBox="0 0 160 160">
+      <g fill="none" stroke="#d4af37" stroke-width="1.8">
+        <path d="M80 150 C 70 110, 70 90, 80 70" />
+        <circle cx="80" cy="60" r="9" fill="#d4af37" stroke="none"/>
+        <path d="M80 54 l0 -14 M74 44 l-6 -8 M86 44 l6 -8" />
+        <path d="M80 78 C 40 92, 26 60, 30 34 C 46 52, 62 60, 78 74" />
+        <path d="M80 78 C 120 92, 134 60, 130 34 C 114 52, 98 60, 82 74" />
+        <path d="M80 82 C 52 108, 34 96, 24 72 C 44 84, 62 84, 78 80" />
+        <path d="M80 82 C 108 108, 126 96, 136 72 C 116 84, 98 84, 82 80" />
+        <circle cx="30" cy="40" r="5" fill="#2a7f7a" stroke="none"/>
+        <circle cx="130" cy="40" r="5" fill="#2a7f7a" stroke="none"/>
+        <circle cx="26" cy="74" r="4" fill="#2a7f7a" stroke="none"/>
+        <circle cx="134" cy="74" r="4" fill="#2a7f7a" stroke="none"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <script src="/templates/_shared/thewed.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

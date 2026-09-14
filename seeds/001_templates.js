@@ -42,6 +42,22 @@ const TEMPLATES = [
     preview_url: '/templates/template-5/preview.svg',
     price: 6000.0,
   },
+  {
+    id: 6,
+    name: 'Ceylon Traditional',
+    folder_key: 'template-6',
+    animation_style: 'oil-lamp',
+    preview_url: '/templates/template-6/preview.svg',
+    price: 6000.0,
+  },
+  {
+    id: 7,
+    name: 'Nilame Royale',
+    folder_key: 'template-7',
+    animation_style: 'royal-peacock',
+    preview_url: '/templates/template-7/preview.svg',
+    price: 6500.0,
+  },
 ];
 
 exports.seed = async function seed(knex) {
